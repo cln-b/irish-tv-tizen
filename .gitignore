@@ -17,3 +17,11 @@ author-signature.xml
 signature[0-9]*.xml
 .metadata/
 .settings/
+
+.tv-app-next/
+.tv-app-previous/
+__pycache__/
+*.pyc
+
+# Local cross-chat handoff; not part of the public source snapshot.
+/AGENTS.md

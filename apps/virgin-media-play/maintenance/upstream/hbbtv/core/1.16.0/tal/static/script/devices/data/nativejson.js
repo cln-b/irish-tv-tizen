@@ -1,0 +1,1 @@
+define("antie/devices/data/nativejson",["antie/devices/browserdevice"],(function(e){"use strict";e.prototype.decodeJson=function(e){return JSON.parse(e)},e.prototype.encodeJson=function(e){return JSON.stringify(e)}}));

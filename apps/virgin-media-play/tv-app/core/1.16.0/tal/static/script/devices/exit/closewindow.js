@@ -1,0 +1,1 @@
+define("antie/devices/exit/closewindow",["antie/devices/browserdevice"],(function(e){"use strict";e.prototype.exit=function(){window.close()}}));

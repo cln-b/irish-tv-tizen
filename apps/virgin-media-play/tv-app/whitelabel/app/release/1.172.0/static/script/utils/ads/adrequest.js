@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/ads/adrequest",["antie/class"],(function(t){"use strict";return t.extend({init:function(t,i,e,s,a,n,l){this.url=t,this.adPosition=i,this.loaded=!1,this.json=e,this.overlayID=a,this.overlayStartTime=n,this.overlayDuration=l,this.midRollStartTime=s}})}));

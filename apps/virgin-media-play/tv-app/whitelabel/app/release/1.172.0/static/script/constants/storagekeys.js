@@ -1,0 +1,1 @@
+define("whitelabelapp/constants/storagekeys",["antie/class"],(function(e){"use strict";return new(e.extend({init:function(){this.AUDIO_LANGUAGE="audioLanguageStorageKey",this.SUBTITLE_LANGUAGE="subtitleLanguageStorageKey",this.LEGACY_AUDIO_DESCRIPTION_PREFERENCE="audioDescriptionEnabled",this.LEGACY_SUBTITLES_ENABLED_PREFERENCE="subtitlesEnabled"}}))}));

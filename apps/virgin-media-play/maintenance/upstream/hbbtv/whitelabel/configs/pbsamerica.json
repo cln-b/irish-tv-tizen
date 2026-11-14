@@ -1,0 +1,365 @@
+{
+  "font": {
+    "Sizes": {
+      "h1": null,
+      "h2": null,
+      "h3": null,
+      "detailsControlButton": 17,
+      "moreMenuButton": 29
+    },
+    "Positions": {
+      "episodeCount": 15
+    },
+    "Style": {
+      "textStyle": null,
+      "textStyleSmall": null,
+      "textStyleVerySmall": null
+    },
+    "family": {
+      "regular": "FigtreeRegular,TiresiasScreenfont,sans-serif",
+      "bold": "FigtreeBold,TiresiasScreenfont,sans-serif"
+    }
+  },
+  "icons": {
+    "App Icons": null,
+    "Play icons": null,
+    "Free flag icons": null,
+    "Large logo icons": null,
+    "Small logo icons": null,
+    "Tab bar icons": null
+  },
+  "toggles": {
+    "contentRestrictionAge": 16,
+    "details": {
+      "display_thumbnail_titles": true,
+      "display_episode_count": false,
+      "display_section_titles": true,
+      "display_carousel_gradient": true,
+      "display_entitlement_tags": false
+    },
+    "clickthroughscreen": {
+      "display_thumbnail_titles": true,
+      "display_episode_count": true,
+      "display_section_titles": true,
+      "display_carousel_gradient": false,
+      "display_entitlement_tags": false,
+      "display_thumbnail_episode_number": true,
+      "display_thumbnail_series_titles": true
+    },
+    "player": {
+      "display_DigitalOnScreenGraphic": false
+    },
+    "playAdverts": {
+      "yv": true,
+      "fvp": true,
+      "fly": true,
+      "fsat": true,
+      "stg": {
+        "yv": false,
+        "fvp": true,
+        "fly": true,
+        "fsat": true
+      },
+      "prd": {
+        "yv": false,
+        "fvp": true,
+        "fly": true,
+        "fsat": true
+      }
+    },
+    "authUsers": false,
+    "lazyLoadingEnabled": true,
+    "heroAutoScrollDelayMs": 6000
+  },
+  "menutabs": [
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true
+      },
+      "id": "home",
+      "title": "header_tab_home",
+      "path": "page/home"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true
+      },
+      "id": "ondemand",
+      "title": "header_tab_catchup",
+      "path": {
+        "yv": "page/catchup",
+        "fvp": "page/catchup",
+        "fly": "page/catchup",
+        "fsat": "page/catchup",
+        "def": "page/catchup",
+        "sam": "page/catchup",
+        "tizen": "page/catchup",
+        "lg": "page/catchup"
+      },
+      "grid": true
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": false,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": false,
+        "display_thumbnail_series_titles": true
+      },
+      "id": "series",
+      "title": "header_tab_demand",
+      "path": "series"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": false,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true,
+        "display_thumbnail_titles_on_gridview": true
+      },
+      "id": "favourites",
+      "title": "header_tab_watchlist",
+      "path": "favourites"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true
+      },
+      "id": "search",
+      "title": "header_tab_search",
+      "path": "v1",
+      "icon": "white"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": false,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true
+      },
+      "id": "more",
+      "title": "header_tab_more",
+      "path": "more",
+      "icon": "white"
+    }
+  ],
+  "VODkey": "546retgju9549i454940jg9jh64juyhj54654ghh",
+  "apiSettings": {
+    "apiKey": "6Fy3Yb4Pz6En0Nb0Kl2Ms9Fj9Wd1Xf"
+  },
+  "copyrightmessage": "",
+  "About text": null,
+  "AVOD codes": null,
+  "SVOD codes": null,
+  "moreMenu": [
+    {
+      "id": "help",
+      "title": "more_help",
+      "type": "text",
+      "uri": "http://hybridtv.ss7.tv/whitelabel/static-text/pbsamerica-help.txt"
+    },
+    {
+      "id": "about",
+      "title": "more_about",
+      "type": "text",
+      "uri": "http://hybridtv.ss7.tv/whitelabel/static-text/pbsamerica-about.txt"
+    },
+    {
+      "id": "terms",
+      "title": "more_terms",
+      "type": "text",
+      "uri": "http://hybridtv.ss7.tv/whitelabel/static-text/pbsamerica-terms.txt"
+    },
+    {
+      "id": "privacy",
+      "title": "more_privacy",
+      "type": "text",
+      "uri": "http://hybridtv.ss7.tv/whitelabel/static-text/pbsamerica-privacy.txt"
+    },
+    {
+      "id": "parentalcontrols",
+      "title": "parental_controls_header_parental",
+      "type": "pin"
+    }
+  ],
+  "themeSettings": {
+    "theme": "v2",
+    "colours": {
+      "tertiary": "#2638C4",
+      "quaterniary": "#0F1E8C",
+      "textFocussed": "#fff",
+      "tertiaryOpaque": "rgba(0,0,0,1)",
+      "episodeCount": "darkpink",
+      "lockColour": "black",
+      "episodeCountText": "#fff",
+      "searchIcon": {
+        "blur": "white",
+        "focus": "white"
+      },
+      "primary": "#0a145a",
+      "secondary": "#ffffff",
+      "background": "#2638c4",
+      "flag": "#ffffff",
+      "progressbar": "#0a145a",
+      "text": "#FFFFFF",
+      "bannertext": "#FFFFFF",
+      "playlist": "#FFFFFF",
+      "splashtext": "#FFFFFF",
+      "highlight": "#FFFFFF",
+      "flip": "#000000",
+      "highlightonbackground80": "#D4D7F3",
+      "highlightonbackground60": "#a8afe7",
+      "highlightonbackground40": "#7D88DC",
+      "highlightonbackground20": "#5160D0",
+      "highlightonbackground05": "#3142C7",
+      "highlightonprimary": "#ffffff",
+      "highlightonsecondary": "#0F1E8C",
+      "highlightonbuttontwo": "#ffffff",
+      "highlightonbuttonone": "#0F1E8C",
+      "highlightonflags": "#FFFFFF",
+      "blackonbackground": "#00020D",
+      "buttonone": "#ffffff",
+      "buttononehover": "#a6a6a6",
+      "buttononedisabled": "#606060",
+      "buttontwo": "#0b0f37",
+      "buttontwohover": "#FFFFFF",
+      "buttontwodisabled": "#02030c",
+      "success": "#50B04A",
+      "warning": "#B97D19",
+      "error": "#D32029",
+      "banner": "#0A145A",
+      "gradientbackground": "#2A3BC5",
+      "gradienthighlight05onbackground": "#3142C7",
+      "focussedtilecolour": "#FFFFFF"
+    },
+    "font": {
+      "Sizes": {
+        "h1": null,
+        "h2": null,
+        "h3": null,
+        "detailsControlButton": 17,
+        "moreMenuButton": 29
+      },
+      "Style": {
+        "textStyle": null,
+        "textStyleSmall": null,
+        "textStyleVerySmall": null
+      },
+      "family": {
+        "regular": "FigtreeRegular,TiresiasScreenfont,sans-serif",
+        "bold": "FigtreeBold,TiresiasScreenfont,sans-serif"
+      }
+    }
+  },
+  "errorBannerDuration": 5001,
+  "displayRelatedContent": true,
+  "appId": "com.pbs.app",
+  "appName": "PBS America",
+  "errorPrefix": "pbs",
+  "barker": false,
+  "companyId": 181,
+  "companyUuid": "company_b7c825f4-2b47-11ec-a69b-06b69c2357cd",
+  "boot": {
+    "fvp": {
+      "stg": "1.163.1",
+      "prd": "1.163.1",
+      "history": [
+        { "v": "1.92.8" },
+        { "v": "1.94.8" },
+        { "v": "1.102.5", "d": "15/01/2024" },
+        { "v": "1.145.1", "d": "10/02/2025" },
+        { "v": "1.163.1", "d": "05/11/2025" }
+      ]
+    },
+    "fly": {
+      "stg": "1.163.1",
+      "prd": "1.163.1",
+      "history": [
+        { "v": "1.143.0" },
+        { "v": "1.145.1", "d": "10/02/2025" },
+        { "v": "1.163.1", "d": "05/11/2025" }
+      ]
+    },
+    "fsat": {
+      "stg": "1.163.1",
+      "prd": "1.163.1",
+      "history": [
+        { "v": "1.92.8" },
+        { "v": "1.94.8" },
+        { "v": "1.145.1", "d": "10/02/2025" },
+        { "v": "1.163.1", "d": "05/11/2025" }
+      ]
+    },
+    "lg": {
+      "stg": "1.163.1",
+      "prd": "1.163.1",
+      "history": [{ "v": "1.98.4" }, { "v": "1.163.1", "d": "05/11/2025" }]
+    },
+    "sam": {
+      "dev": "1.159.1",
+      "stg": "1.163.1",
+      "prd": "1.163.1",
+      "history": [{ "v": "1.163.1", "d": "05/11/2025" }]
+    }
+  },
+  "gaid": "",
+  "support": "",
+  "npaw": true,
+  "videoSplash": true,
+  "nextGenPlayer": {
+    "version": "1.22.0",
+    "config": {}
+  },
+  "nextGen": {
+    "bitmovin": {
+      "version": "1.22.7",
+      "config": {}
+    },
+    "useOpenSearch": true,
+    "useTrendingSearch": true,
+    "boot": {
+      "lg": {
+        "whitelistingactive": false,
+        "whitelist": [],
+        "history": []
+      },
+      "sam": {
+        "whitelistingactive": true,
+        "whitelist": [{
+            "ips": ["94.6.187.221", "143.58.207.172", "2a02:c7c:6a25:eb00:48a8:5c63:5457:1e32", "86.29.209.238"],
+            "version": "2.44.10"
+          },
+        {
+            "ips": ["2a02:c7c:6a25:eb00:55c4:ccfa:41a5:199c", "fd4d:2e23:b88e:0:55c4:ccfa:41a5:199c", "fd4d:2e23:b88e:0:bab4:9ff:fe59:e71a"],
+            "version": "2.44.10"
+          }],
+        "stg": "2.44.10",
+        "history": []
+      }
+    }
+  }
+}

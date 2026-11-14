@@ -1,30 +1,45 @@
-"""Package the prebuilt TV app as an unsigned public release asset."""
-import argparse
+"""Package reviewed prebuilt apps as unsigned public WGT assets."""
+import argparse,hashlib,json,re
 from pathlib import Path
+from zipfile import ZipFile,ZIP_DEFLATED
 import xml.etree.ElementTree as ET
-from zipfile import ZipFile, ZIP_DEFLATED
+ROOT=Path(__file__).resolve().parents[1]
+APPS=('rte-player','virgin-media-play','tg4')
+def validate(name):
+ app=ROOT/'apps'/name;version=(app/'VERSION').read_text().strip();manifest=ET.parse(app/'tv-app/config.xml').getroot()
+ expected=version+'.0' if version.count('.')==1 else version
+ if manifest.get('version')!=expected:raise ValueError(name+': VERSION/config.xml mismatch')
+ for tag in ['content','icon']:
+  element=manifest.find('{http://www.w3.org/ns/widgets}'+tag)
+  if element is None or not (app/'tv-app'/element.get('src','')).is_file():raise ValueError(name+': missing '+tag)
+ if name=='rte-player' and (app/'tv-app/login-helper-config.js').read_text().strip()!='window.__rteLoginHelper={"url":"","key":""};':raise ValueError('RTÉ helper settings must be blank in public releases')
+ if name=='virgin-media-play':
+  html=(app/'tv-app/whitelabel/app/release/1.172.0/default-webkit-default.html').read_text()
+  if 'window.vmTimingProxy=null' not in html or 'window.vmDiagnosticsEnabled=false' not in html:raise ValueError('Virgin Media public build must have proxy/diagnostics disabled')
+  native=(app/'tv-app/avplay.js').read_text()
+  if 'restartLive' in native or 'watchLive' in native:raise ValueError('Failed automatic live-reopen experiment must not be released')
+  if not re.search(r'MAX_RECOVERY_ATTEMPTS=window\.vmAvPlay.*?\?0:3',(app/'tv-app/whitelabel/app/release/1.172.0/static/script/appui/components/player/live.js').read_text()):raise ValueError('Native live fresh-retry protection is missing')
+ if name=='tg4':
+  if manifest.find('{http://www.w3.org/ns/widgets}name').text!='TG4+':raise ValueError('TG4 display name must be TG4+')
+  if 'tg4Worldwide.epg' not in (app/'tv-app/app.js').read_text():raise ValueError('TG4 Worldwide routing is missing')
+  if '6384196213112' not in (app/'tv-app/worldwide.js').read_text():raise ValueError('TG4 Worldwide identity is missing')
+  for p in (app/'tv-app').rglob('*'):
+   if p.is_file() and any(x in p.name for x in ['probe','native-test','legacy-eme']):raise ValueError('TG4 diagnostic experiment in public app: '+p.name)
+ return app,version
 
-root = Path(__file__).resolve().parents[1]
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--output', type=Path, default=root / 'dist')
-args = parser.parse_args()
-version = (root / 'VERSION').read_text().strip()
-app = root / 'tv-app'
-manifest = ET.parse(app / 'config.xml').getroot()
-manifest_version = version + '.0' if len(version.split('.')) == 2 else version
-if manifest.attrib['version'] != manifest_version:
-    raise SystemExit('VERSION and config.xml do not agree')
-config = (app / 'login-helper-config.js').read_text().strip()
-if config != 'window.__rteLoginHelper={"url":"","key":""};':
-    raise SystemExit('Public release requires empty helper settings')
-args.output.mkdir(parents=True, exist_ok=True)
-output = args.output / ('rte-player-' + version + '-unsigned.wgt')
-with ZipFile(output.with_suffix('.tmp'), 'w', ZIP_DEFLATED) as archive:
-    for path in sorted(app.rglob('*')):
-        if path.is_file() and not any(part.startswith('.') for part in path.relative_to(app).parts):
-            if path.name == 'author-signature.xml' or path.name.startswith('signature') and path.suffix == '.xml':
-                continue
-            archive.write(path, path.relative_to(app).as_posix())
-    archive.write(root / 'README.md', 'CONFIGURE.md')
-output.with_suffix('.tmp').replace(output)
-print(output)
+def main():
+ parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--app',choices=(*APPS,'all'),default='all');parser.add_argument('--output',type=Path,default=ROOT/'dist');args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
+ for name in APPS if args.app=='all' else [args.app]:
+  app,version=validate(name);output=args.output/(name+'-'+version+'-unsigned.wgt')
+  with ZipFile(output.with_suffix('.tmp'),'w',ZIP_DEFLATED) as z:
+   for p in sorted((app/'tv-app').rglob('*')):
+    if not p.is_file() or any(part.startswith('.') for part in p.relative_to(app/'tv-app').parts):continue
+    if p.name=='author-signature.xml' or re.fullmatch(r'signature\d*\.xml',p.name):continue
+    if p.suffix.lower() in ['.p12','.pem','.key','.har','.log']:raise ValueError('Private file in TV app: '+p.name)
+    z.write(p,p.relative_to(app/'tv-app').as_posix())
+   z.write(app/'README.md','CONFIGURE.md')
+  output.with_suffix('.tmp').replace(output);print(output)
+ sums=[]
+ for p in sorted(args.output.glob('*-unsigned.wgt')):sums.append(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name)
+ (args.output/'SHA256SUMS').write_text('\n'.join(sums)+'\n')
+if __name__=='__main__':main()

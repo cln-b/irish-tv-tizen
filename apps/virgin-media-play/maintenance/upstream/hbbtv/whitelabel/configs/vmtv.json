@@ -1,0 +1,631 @@
+{
+  "preReleaseVersion": "1.170.4",
+  "font": {
+    "Sizes": {
+      "h1": null,
+      "h2": null,
+      "h3": null,
+      "detailsControlButton": 17,
+      "moreMenuButton": 29
+    },
+    "Positions": {
+      "episodeCount": 17,
+      "episodeCountSmall": 20
+    },
+    "family": {
+      "regular": "FigtreeRegular,sans-serif",
+      "bold": "FigtreeBold,sans-serif"
+    }
+  },
+  "playerModule": {
+    "tvo": "antie/devices/mediaplayer/shaka"
+  },
+  "toggles": {
+    "contentRestrictionAge": 16,
+    "details": {
+      "display_thumbnail_titles": true,
+      "display_episode_count": false,
+      "display_section_titles": true,
+      "display_carousel_gradient": true,
+      "display_entitlement_tags": false
+    },
+    "clickthroughscreen": {
+      "display_thumbnail_titles": true,
+      "display_episode_count": true,
+      "display_section_titles": false,
+      "display_carousel_gradient": false,
+      "display_entitlement_tags": false,
+      "display_thumbnail_episode_number": true,
+      "display_thumbnail_aired": false
+    },
+    "player": {
+      "display_DigitalOnScreenGraphic": false
+    },
+    "playAdverts": {
+      "fsat": true,
+      "fvp": true,
+      "fly": true,
+      "yv": true,
+      "sam": true,
+      "lg": true,
+      "vda": true,
+      "hzn": true,
+      "ps5": true,
+      "stg": {
+        "fsat": true,
+        "fvp": true,
+        "fly": true,
+        "yv": true,
+        "sam": false,
+        "lg": true,
+        "vda": true,
+        "hzn": true,
+        "ps5": true
+      },
+      "prd": {
+        "yv": true,
+        "fsat": true,
+        "fvp": true,
+        "fly": true,
+        "sam": true,
+        "lg": true,
+        "vda": true,
+        "hzn": true,
+        "ps5": true
+      }
+    },
+    "authUsers": true,
+    "restrictWatchingWithoutLogin": true,
+    "permitLivePlaybackWithoutLogin": false
+  },
+  "menutabs": [
+    {
+      "toggles": {
+        "display_thumbnail_titles": false,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": false,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true,
+        "display_thumbnail_aired": false,
+        "display_hero_titles": true
+      },
+      "id": "home",
+      "title": "header_tab_home",
+      "path": "page/home"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": false,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true,
+        "display_thumbnail_aired": false
+      },
+      "id": "livemulti",
+      "title": "header_tab_live",
+      "path": "live/multi"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_series_titles": true,
+        "display_thumbnail_aired": false
+      },
+      "id": "vod",
+      "title": "header_tab_catchup",
+      "path": {
+        "def": "page/catchup"
+      },
+      "grid": true
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": false,
+        "display_episode_count": true,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_thumbnail_series_titles": true,
+        "display_entitlement_tags": false
+      },
+      "id": "series",
+      "title": "header_tab_series",
+      "path": {
+        "def": "series"
+      },
+      "grid": true
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false
+      },
+      "id": "favourites",
+      "title": "header_tab_watchlist",
+      "path": "favourites"
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": true,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_thumbnail_series_titles": true,
+        "display_thumbnail_aired": false
+      },
+      "id": "search",
+      "title": "header_tab_search",
+      "path": "search",
+      "icon": true
+    },
+    {
+      "toggles": {
+        "display_thumbnail_titles": false,
+        "display_episode_count": false,
+        "display_section_titles": true,
+        "display_carousel_gradient": true,
+        "display_thumbnail_episode_number": true,
+        "display_entitlement_tags": false,
+        "display_thumbnail_aired": false
+      },
+      "id": "more",
+      "title": "header_tab_more",
+      "path": "more",
+      "icon": true
+    }
+  ],
+  "VODkey": "ctI1Ie3yrzhCIMWatEevZgRFxzTZVO",
+  "apiSettings": {
+    "apiKey": "821254297041614280861178657602"
+  },
+  "copyrightmessage": "©2024. Virgin Media Television, Dublin.",
+  "moreMenu": [
+    {
+      "id": "auth",
+      "title": "header_tab_login",
+      "type": "auth",
+      "host": "http://api-auth-v3.ss7.tv/device"
+    },
+    {
+      "id": "help",
+      "title": "more_help",
+      "type": "text"
+    },
+    {
+      "id": "terms",
+      "title": "more_terms",
+      "type": "text"
+    },
+    {
+      "id": "privacy",
+      "title": "more_privacy",
+      "type": "text"
+    },
+    {
+      "id": "consent",
+      "title": "more_ad_consent",
+      "type": "link",
+      "uri": "javascript:window._sp_.gdpr.loadNativeOtt({privacyManagerId})"
+    }
+  ],
+  "themeSettings": {
+    "theme": "v2",
+    "buttonCorner": "5px",
+    "font": {
+      "family": {
+        "regular": "FigtreeRegular,sans-serif",
+        "bold": "FigtreeBold,sans-serif"
+      }
+    },
+    "colours": {
+      "tertiary": "#ffffff",
+      "tertiaryOpaque": "rgba(255,255,255,1)",
+      "episodeCount": "vmtv",
+      "splash": "#000000",
+      "progressForeground": "#ed0000",
+      "primary": "#19303c",
+      "secondary": "#ed0000",
+      "background": "#1e2833",
+      "flag": "#ed0000",
+      "progressbar": "#ed0000",
+      "text": "#ffffff",
+      "bannertext": "#ffffff",
+      "playlist": "#ffffff",
+      "splashtext": "#ffffff",
+      "highlight": "#ffffff",
+      "flip": "#000000",
+      "highlightonbackground80": "#d2d4d6",
+      "highlightonbackground60": "#787e85",
+      "highlightonbackground40": "#787e85",
+      "highlightonbackground20": "#4b535c",
+      "highlightonbackground05": "#29333d",
+      "highlightonprimary": "#ffffff",
+      "highlightonsecondary": "#ffffff",
+      "highlightonbuttonone": "#FFFFFF",
+      "highlightonbuttontwo": "#ffffff",
+      "highlightonflags": "#ffffff",
+      "blackonbackground": "#111111",
+      "buttonone": "#ed0000",
+      "buttononehover": "#b80000",
+      "buttononedisabled": "#8a0303",
+      "buttontwo": "#45565f",
+      "buttontwohover": "#ffffff",
+      "buttontwodisabled": "#272f34",
+      "success": "#50B04A",
+      "warning": "#B97D19",
+      "error": "#D32029",
+      "banner": "#ed0000",
+      "gradientbackground": "#202020",
+      "gradienthighlight05onbackground": "#202020",
+      "focussedtilecolour": "#ed0000"
+    }
+  },
+  "errorBannerDuration": 5001,
+  "displayRelatedContent": true,
+  "appId": "virginmediatelevision.ie",
+  "appName": "Virgin Media Play",
+  "errorPrefix": "VMTV",
+  "barker": false,
+  "videoSplash": false,
+  "companyId": 196,
+  "companyUuid": "company_942f683c-9041-42de-9911-a9e4cd98a4e9",
+  "onesdk": {
+    "enabled": false
+  },
+  "gaid": "G-Q61BX3L8E9",
+  "subtitles": true,
+  "loadImaDai": false,
+  "playerExternal": {
+    "live": {
+      "tvo": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.26.1/index.html",
+      "lg": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.22.1/index.html",
+      "sam": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.22.1/index.html",
+      "hzn": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.26.1/index.html"
+    },
+    "tvo": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.26.1/index.html",
+    "lg": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.22.7/index.html",
+    "sam": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.22.1/index.html",
+    "hzn": "https://hybridtv.ss7.tv/apps/bitmovin/release/1.26.1/index.html"
+  },
+  "playerVersion": {
+    "lg": "4.9.24",
+    "hzn": "4.15.5",
+    "tvo": "4.16.6"
+  },
+  "playerConfig": {
+    "base": {
+      "preferredSubtitleLanguage": "off",
+      "minAdHeight": 360,
+      "bitmovin": {
+        "adaptation": {},
+        "playback": {
+          "preferredTech": [
+            {
+              "player": "html5",
+              "streaming": "dash"
+            }
+          ]
+        }
+      }
+    },
+    "hzn": {
+      "plaintextchallenge": true
+    },
+    "preferredSubtitleLanguage": "off",
+    "minAdHeight": 360,
+    "bitmovin": {
+      "adaptation": {},
+      "playback": {
+        "preferredTech": [
+          {
+            "player": "html5",
+            "streaming": "dash"
+          }
+        ]
+      }
+    }
+  },
+  "boot": {
+    "tvo": {
+      "stg": "1.172.0",
+      "prd": "1.172.0",
+      "history": [
+        {
+          "v": "1.152.0",
+          "d": "01/04/2025"
+        },
+        {
+          "v": "1.155.0",
+          "d": "09/07/2025"
+        },
+        {
+          "v": "1.163.0",
+          "d": "23/10/2025"
+        },
+        {
+          "v": "1.165.0",
+          "d": "27/11/2025"
+        },
+        {
+          "v": "1.170.1",
+          "d": "18/08/2026"
+        },
+        {
+          "v": "1.170.2",
+          "d": "25/08/2026"
+        },
+        {
+          "v": "1.170.4",
+          "d": "10/09/2026"
+        },
+        {
+          "v": "1.172.0",
+          "d": "15/10/2026"
+        }
+      ]
+    },
+    "lg": {
+      "stg": "1.172.0",
+      "prd": "1.172.0",
+      "history": [
+        {
+          "v": "1.136.0",
+          "d": "18/10/2024"
+        },
+        {
+          "v": "1.141.2",
+          "d": "13/12/2024"
+        },
+        {
+          "v": "1.141.5",
+          "d": "20/12/2024"
+        },
+        {
+          "v": "1.145.2",
+          "d": "11/02/2025"
+        },
+        {
+          "v": "1.146.0",
+          "d": "22/02/2025"
+        },
+        {
+          "v": "1.153.3",
+          "d": "29/05/2025"
+        },
+        {
+          "v": "1.154.1",
+          "d": "03/07/2025"
+        },
+        {
+          "v": "1.155.0",
+          "d": "09/07/2025"
+        },
+        {
+          "v": "1.159.0",
+          "d": "28/08/2025"
+        },
+        {
+          "v": "1.160.1",
+          "d": "11/09/2025"
+        },
+        {
+          "v": "1.163.0",
+          "d": "23/10/2025"
+        },
+        {
+          "v": "1.165.0",
+          "d": "27/11/2025"
+        },
+        {
+          "v": "1.170.1",
+          "d": "14/08/2026"
+        },
+        {
+          "v": "1.170.2",
+          "d": "25/08/2026"
+        },
+        {
+          "v": "1.170.4",
+          "d": "10/09/2026"
+        },
+        {
+          "v": "1.172.0",
+          "d": "15/10/2026"
+        }
+      ]
+    },
+    "sam": {
+      "stg": "1.172.0",
+      "prd": "1.172.0",
+      "history": [
+        {
+          "v": "1.134.0",
+          "d": "10/10/2024"
+        },
+        {
+          "v": "1.136.1",
+          "d": "23/10/2024"
+        },
+        {
+          "v": "1.141.2",
+          "d": "13/12/2024"
+        },
+        {
+          "v": "1.145.2",
+          "d": "23/02/2025"
+        },
+        {
+          "v": "1.154.1",
+          "d": "07/07/2025"
+        },
+        {
+          "v": "1.155.0",
+          "d": "09/07/2025"
+        },
+        {
+          "v": "1.159.0",
+          "d": "09/09/2025"
+        },
+        {
+          "v": "1.160.1",
+          "d": "11/09/2025"
+        },
+        {
+          "v": "1.163.0",
+          "d": "23/10/2025"
+        },
+        {
+          "v": "1.165.0",
+          "d": "27/11/2025"
+        },
+        {
+          "v": "1.170.1",
+          "d": "14/08/2026"
+        },
+        {
+          "v": "1.170.2",
+          "d": "25/08/2026"
+        },
+        {
+          "v": "1.170.4",
+          "d": "10/09/2026"
+        },
+        {
+          "v": "1.172.0",
+          "d": "15/10/2026"
+        }
+      ]
+    },
+    "hzn": {
+      "stg": "1.172.0",
+      "prd": "1.172.0",
+      "history": [
+        {
+          "v": "1.128.3",
+          "d": "29/08/2024"
+        },
+        {
+          "v": "1.153.3",
+          "d": "29/05/2025"
+        },
+        {
+          "v": "1.154.1",
+          "d": "03/07/2025"
+        },
+        {
+          "v": "1.155.0",
+          "d": "09/07/2025"
+        },
+        {
+          "v": "1.158.0",
+          "d": "12/08/2025"
+        },
+        {
+          "v": "1.163.0",
+          "d": "23/10/2025"
+        },
+        {
+          "v": "1.170.1",
+          "d": "24/08/2026"
+        },
+        {
+          "v": "1.170.2",
+          "d": "25/08/2026"
+        },
+        {
+          "v": "1.170.4",
+          "d": "10/09/2026"
+        },
+        {
+          "v": "1.172.0",
+          "d": "12/10/2026"
+        }
+      ]
+    },
+    "azn": {
+      "stg": "PROD-5198",
+      "prd": "PROD-5198",
+      "history": []
+    }
+  },
+  "api": {
+    "stream": {
+      "host": "http://api-streams-stg.simplestream.cloud",
+      "path": "/api/{{type}}/{{uvid}}",
+      "override": false
+    }
+  },
+  "nextGen": {
+    "bitmovin": {
+      "config": {}
+    },
+    "useOpenSearch": true,
+    "useTrendingSearch": true,
+    "boot": {
+      "lg": {
+        "stg": "2.45.0",
+        "whitelistingactive": true,
+        "whitelist": [
+          {
+            "ips": ["217.41.184.221", "187.40.36.68"],
+            "version": "2.45.0"
+          }
+        ],
+        "history": []
+      },
+      "sam": {
+        "stg": "2.45.0",
+        "whitelistingactive": true,
+        "whitelist": [
+          {
+            "ips": [
+              "187.40.36.99",
+              "217.41.184.221",
+              "95.214.231.58",
+              "2a02:6b6f:f8e7:4700:b172:6d3c:d515:25a7"
+            ],
+            "version": "2.45.0"
+          }
+        ],
+        "history": []
+      },
+      "tvo": {
+        "stg": "2.45.0",
+        "whitelistingactive": false,
+        "whitelist": [
+          {
+            "ips": ["185.241.167.230", "194.34.235.220", "84.21.169.35"],
+            "version": "1.165.0"
+          }
+        ],
+        "history": []
+      },
+      "hzn": {
+        "stg": "2.45.0",
+        "whitelistingactive": true,
+        "whitelist": [
+          {
+            "ips": ["86.29.209.238"],
+            "version": "2.45.0"
+          }
+        ],
+        "history": []
+      }
+    }
+  }
+}

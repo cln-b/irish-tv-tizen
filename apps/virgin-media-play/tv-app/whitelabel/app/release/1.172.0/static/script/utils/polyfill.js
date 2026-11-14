@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/polyfill",["antie/class","whitelabelapp/utils/polyfill/object","whitelabelapp/utils/polyfill/array","whitelabelapp/utils/polyfill/string"],(function(l,i,t,e){"use strict";return new(l.extend({init:function(){window.crypto||require(["whitelabelapp/utils/polyfill/window-crypto"],(function(){console.log("window.crypto polyfilled")}))}}))}));

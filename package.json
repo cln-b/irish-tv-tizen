@@ -1,0 +1,8 @@
+{
+  "name": "irish-tv-legacy",
+  "private": true,
+  "scripts": {
+    "release": "python3 scripts/package-release.py",
+    "check": "python3 scripts/check-release.py"
+  }
+}

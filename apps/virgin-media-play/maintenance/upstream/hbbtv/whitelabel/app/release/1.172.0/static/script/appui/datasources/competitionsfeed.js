@@ -1,0 +1,1 @@
+define("whitelabelapp/appui/datasources/competitionsfeed",["whitelabelapp/appui/datasources/feed","whitelabelapp/utils/widgetconfig"],(function(t,i){return t.extend({init:function(){this.id="competitionsfeed"},loadData:function(t,i){this.callbacks=t,this.settings=i.settings,this.options=this.settings.model,this._loadData()},parseData:function(){return this.options}})}));

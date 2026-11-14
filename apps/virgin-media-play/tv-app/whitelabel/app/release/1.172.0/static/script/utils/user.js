@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/user",["antie/class","whitelabelapp/services/auth","whitelabelapp/services/entitlements"],(function(e,i,n){"use strict";window.crypto;return new(e.extend({isLocked:function(e){return this.loginRequired()&&n.isLocked(e)},loginRequired:function(){return i.loginRequired()},isFree:function(e){return n.isFree(e)}}))}));

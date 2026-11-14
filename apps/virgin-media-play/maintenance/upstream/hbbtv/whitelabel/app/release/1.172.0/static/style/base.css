@@ -1,0 +1,988 @@
+/*
+// TODO Explicitly set default color and background since some devices (such as Hisense) don't set expected default colors.
+// But this needs thorough testing, because some elements have not really been styled specifically (e.g. searchinput text).
+*/
+
+/*
+// MARK: -FONTS
+*/
+
+* {
+  /*
+  color: white;
+  background-color: transparent;
+  */
+  font-family: "FigtreeRegular", "TiresiasScreenfont", sans-serif;
+}
+
+/*
+// MARK: Common font
+*/
+@font-face {
+  font-family: 'FigtreeRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/figtree/Figtree-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'FigtreeBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/figtree/Figtree-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: Fallback font
+// SHOULD be available on device, but HbbTV spec 2.0.4 now makes this optional, so let's load it
+*/
+@font-face {
+  font-family: 'TiresiasScreenfont';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/tiresiasscreenfont/TiresiasScreenfont-Regular.ttf') format('truetype');
+}
+
+/*
+// MARK: Blaze
+*/
+@font-face {
+  font-family: 'InterRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/inter/Inter-Regular.ttf') format('opentype');
+}
+@font-face {
+  font-family: 'InterBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/inter/Inter-Bold.ttf') format('opentype');
+}
+
+/*
+// MARK: sonykids / tvsn
+*/
+@font-face {
+  font-family: 'SofiaProRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/sofiapro/SofiaProRegular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'SofiaProBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/sofiapro/SofiaProBold.ttf') format('truetype');
+}
+
+/*
+// MARK: ketchup
+*/
+@font-face {
+  font-family: 'TitanOneRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/titanone/TitanOne-Regular.ttf') format('truetype');
+}
+
+/*
+// MARK: yaaas
+*/
+@font-face {
+  font-family: 'TerfensRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/terfens/Terfens-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'TerfensBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/terfens/Terfens-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: amc
+// Watch Free UK / CBS Catchup Channels UK
+*/
+@font-face {
+  font-family: 'InterstateRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/interstate/Interstate-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'InterstateBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/interstate/Interstate-Bold.otf') format('opentype');
+}
+@font-face {
+  font-family: 'LexendDecaRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/lexenddeca/LexendDeca-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'LexendDecaBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/lexenddeca/LexendDeca-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: dtheatre
+*/
+@font-face {
+  font-family: 'PoppinsRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/poppins/Poppins-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'PoppinsBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/poppins/Poppins-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: TBN
+*/
+
+/* New */
+@font-face {
+  font-family: 'NohemiRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/nohemi/Nohemi-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'NohemiBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/nohemi/Nohemi-Bold.otf') format('opentype');
+}
+
+/* Old */
+@font-face {
+  font-family: 'AvenirNextLTProRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/avenirnext-lt-pro/AvenirNextLTProRegular.otf') format('opentype');
+   
+}
+@font-face {
+  font-family: 'AvenirNextLTProBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/avenirnext-lt-pro/AvenirNextLTProBold.otf') format('opentype');
+}
+
+/*
+// MARK: GAAGO
+*/
+
+/* New */
+@font-face {
+  font-family: 'BarlowRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/barlow/Barlow-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'BarlowBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/barlow/Barlow-Bold.ttf') format('truetype');
+}
+
+/* Old */
+@font-face {
+  font-family: 'GraphikRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/graphik/Graphik-Regular.otf') format('opentype');
+}
+@font-face {
+  font-family: 'GraphikBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/graphik/Graphik-Bold.otf') format('opentype');
+}
+
+/*
+// MARK: CRAFTSY
+*/
+@font-face {
+  font-family: 'FuturaRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/futura/Futura-Medium-01.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'FuturaBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/futura/Futura-Bold-03.ttf') format('truetype');
+}
+
+/*
+// MARK: OPEN SANS
+// Candidate font
+*/
+@font-face {
+  font-family: 'OpenSansRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/opensans/OpenSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'OpenSansBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/opensans/OpenSans-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: ROBOTO 
+// Candidate font
+*/
+@font-face {
+  font-family: 'RobotoRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/roboto/Roboto-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'RobotoBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/roboto/Roboto-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: SOURCE SANS 3
+// Candidate font
+*/
+@font-face {
+  font-family: 'SourceSansRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/source-sans-3/SourceSans3-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'SourceSansBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/source-sans-3/SourceSans3-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: MONA SANS
+// Candidate font
+*/
+@font-face {
+  font-family: 'MonaSansRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/mona-sans/MonaSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'MonaSansBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/mona-sans/MonaSans-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: LATO
+// Candidate font
+*/
+@font-face {
+  font-family: 'LatoRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/lato/Lato-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'LatoBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/lato/Lato-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: MONTSERRAT
+// Candidate font
+*/
+@font-face {
+  font-family: 'MontserratRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/montserrat/Montserrat-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'MontserratBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/montserrat/Montserrat-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: GEIST
+// Candidate font
+*/
+@font-face {
+  font-family: 'GeistRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/geist/Geist-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'GeistBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/geist/Geist-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: UBUNTU
+// Candidate font
+*/
+@font-face {
+  font-family: 'UbuntuRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/ubuntu/Ubuntu-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'UbuntuBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/ubuntu/Ubuntu-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: DM SANS
+// Candidate font
+*/
+@font-face {
+  font-family: 'DMSansRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/dm-sans/DMSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'DMSansBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/dm-sans/DMSans-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: OUTFIT
+// Candidate font
+*/
+@font-face {
+  font-family: 'OutfitRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/outfit/Outfit-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'OutfitBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/outfit/Outfit-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: RED HAT DISPLAY
+// Candidate font
+*/
+@font-face {
+  font-family: 'RedHatDisplayRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/red-hat-display/RedHatDisplay-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'RedHatDisplay';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/red-hat-display/RedHatDisplay-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: INSTRUMENT SANS
+// Candidate font
+*/
+@font-face {
+  font-family: 'InstrumentSansRegular';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/instrument-sans/InstrumentSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'InstrumentSansBold';
+  src: url('//127.0.0.1:18782/whitelabel/assets/font/instrument-sans/InstrumentSans-Bold.ttf') format('truetype');
+}
+
+/*
+// MARK: -BASE STYLES
+*/
+
+html {
+  height: 100%;
+}
+body {
+  overflow: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  background-color: #000000;
+}
+object {
+  position: absolute;
+}
+
+/*
+// MARK: Loading screen
+*/
+
+#static-loading-screen {
+  position: absolute;
+  z-index: 100;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+#static-loading-screen p {
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  margin: 52px 0;
+  letter-spacing: 0.7em;
+}
+#static-loading-screen-logo {
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * [AMC-2951]
+ * Split into separate rules because older TV browsers (e.g. Chromium 68, 48, 84)
+ * invalidate the entire rule if they encounter an unrecognised pseudo-class
+ * like :focus-visible in a selector list.
+*/
+* {
+  outline: none !important;
+}
+
+*:focus {
+  outline: none !important;
+}
+
+*:focus-visible {
+  outline: none !important;
+}
+/*
+// MARK: List widgets
+*/
+
+.horizontallist,
+.verticallist {
+  position: relative;
+}
+.horizontallist .listitem {
+  display: inline-block;
+}
+
+/* nested lists - use #IDs instead for more complex layouts */
+
+.verticallist .horizontallist .listitem {
+  display: inline-block;
+}
+.verticallist .listitem {
+  display: block;
+  position: relative;
+}
+
+/* nested lists - use #IDs instead for more complex layouts */
+
+.horizontallist .verticallist .listitem {
+  display: block;
+}
+
+/*
+// MARK: Horizontal carousel widgets
+*/
+
+/* the mask is the top level of the carousel and defines where it is displayed and how much is visible */
+
+.horizontallistmask {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* ensure nested carousels have correct formatting, you may need to target IDs in complex layouts */
+
+.horizontallistmask .horizontallist .listitem {
+  display: inline-block;
+}
+.horizontalcarousel {
+  width: 99999px;
+  /* needs to be big enough so carousel plus clones do not flow onto more then one line */
+}
+
+/* DEVICE SPECIFIC DEFAULTS EXAMPLE ------------------ */
+
+/* if you target some consoles you may need to add additional styles like this */
+/*
+.someConsoles .horizontallist .listitem {
+  display: inline-block;
+  float: left;
+}
+*/
+
+/* If you target some older tv models, you will need to specify
+initial element background in the base stylesheet, not in dynamically loaded styles. */
+
+/*
+// MARK: Screen sizes
+*/
+
+.sometv.layout540p #app {
+  width: 960px;
+  height: 540px;
+  /*background-image: url(some/image/url_540.png); */
+}
+.sometv.layout720p #app {
+  width: 1280px;
+  height: 720px;
+  /*background-image: url(some/image/url_720.png); */
+}
+.sometv.layout1080p #app {
+  width: 1920px;
+  height: 1080px;
+  /*background-image: url(some/image/url_1080.png); */
+}
+
+/* whitelabelapp BASE STYLES */
+
+/*
+// MARK: CORE
+*/
+
+/* Maple needs initial element background in base stylesheet... not in dynamically loaded styles! */
+
+.samsung.layout540p #app {
+  width: 960px;
+  height: 540px;
+  background-image: url(../img/bbc_background_540.png);
+  background-repeat: no-repeat;
+  background-color: red;
+}
+.samsung.layout720p #app {
+  width: 1280px;
+  height: 720px;
+  background-image: url(../img/bbc_background_720.png);
+  background-repeat: no-repeat;
+}
+.samsung.layout1080p #app {
+  width: 1920px;
+  height: 1080px;
+  background-image: url(../img/bbc_background_1080.png);
+  background-repeat: no-repeat;
+}
+
+/* Sample app specific styles */
+
+#title {
+  font-size: 150%;
+  line-height: 120%;
+  display: block;
+  text-align: center;
+  margin: 2% auto 0 auto;
+}
+.background-none {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+.description {
+  text-align: center;
+  display: block;
+  position: absolute;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  padding: 8px 0px;
+}
+#testPlayer {
+  z-index: 0;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 1280px;
+  height: 720px;
+}
+#playerButtons {
+  text-align: center;
+}
+
+/*
+// MARK: Display/visibility helpers
+*/
+.opacity-0 {
+  opacity: 0;
+}
+.display-none {
+  display: none !important;
+}
+.visibility-hidden {
+  visibility: hidden !important;
+}
+.carouselmask {
+  overflow: hidden;
+}
+#horizontalLandingCullingCarousel_CarouselMask {
+  top: 200px;
+  position: relative;
+}
+.carouselwidgetstrip {
+  position: relative;
+  white-space: nowrap;
+}
+.carouselwidgetstrip.vertical > .carouselItem {
+  display: block;
+}
+.carouselwidgetstrip.horizontal > .carouselItem {
+  display: inline-block;
+}
+#carouselComponent {
+  position: relative;
+}
+#carouselComponent > .description {
+  position: static;
+}
+.carouselwidgetstrip > .button {
+  margin: 0;
+}
+#progressBar_left {
+  min-height: 10px;
+  background: #700;
+}
+#progressBar_inner {
+  width: 10px;
+  min-height: 10px;
+  background: #777;
+  position: relative;
+}
+video,
+#mediaPlayerVideo {
+  object-fit: contain;
+  position: fixed !important;
+  top: 0px !important;
+  left: 0px !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Prevent Captions/subtitles from displaying [GBN-800] */
+/* 
+.vjs-text-track-display {
+  display: none;
+}
+*/
+
+/* Override WebVTT subtitle styles (primarily for Shaka Player) */
+/* 
+::cue {
+  font-size: 24px;
+}
+*/
+
+/*
+// MARK: Shaka subtitles
+// [SML-868]
+*/
+.shaka-text-container,
+.shaka-text-container span {
+  font-size: 36px !important; /* override inline styles */
+  line-height: normal;
+}
+
+.titlehorizontallist .title {
+  font-size: 32px;
+}
+
+/* WORKAROUND [VMTV-1264] */
+#horizontalCullingCarouselDetailsRecommendations_CarouselMask {
+  position: absolute !important;
+  top: 448px !important;
+}
+
+/*
+// MARK: Category and subcategory container
+*/
+#clickthroughscreen #pagescaffold {
+  position: absolute;
+  height: 620px;
+  top: 42.7px;
+}
+
+/*
+// MARK: -ANIMATIONS
+*/
+
+/* Loading spinner animation */
+#loadingIcon {
+  -webkit-animation: spin 1s step-start infinite;
+  -moz-animation: spin 1s step-start infinite;
+  animation: spin 1s step-start infinite;
+}
+@-moz-keyframes spin {
+  100% {
+    -moz-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+  91.67% {
+    -moz-transform: rotate(330deg);
+    transform: rotate(330deg);
+  }
+  83.33% {
+    -moz-transform: rotate(300deg);
+    transform: rotate(300deg);
+  }
+  75% {
+    -moz-transform: rotate(270deg);
+    transform: rotate(270deg);
+  }
+  66.67% {
+    -moz-transform: rotate(240deg);
+    transform: rotate(240deg);
+  }
+  58.33% {
+    -moz-transform: rotate(210deg);
+    transform: rotate(210deg);
+  }
+  50% {
+    -moz-transform: rotate(180deg);
+    transform: rotate(180deg);
+  }
+  41.67% {
+    -moz-transform: rotate(150deg);
+    transform: rotate(150deg);
+  }
+  33.33% {
+    -moz-transform: rotate(120deg);
+    transform: rotate(120deg);
+  }
+  25% {
+    -moz-transform: rotate(90deg);
+    transform: rotate(90deg);
+  }
+  16.67% {
+    -moz-transform: rotate(60deg);
+    transform: rotate(60deg);
+  }
+  8.33% {
+    -moz-transform: rotate(30deg);
+    transform: rotate(30deg);
+  }
+  0% {
+    -moz-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+}
+@-webkit-keyframes spin {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+  91.67% {
+    -webkit-transform: rotate(330deg);
+  }
+  83.33% {
+    -webkit-transform: rotate(300deg);
+  }
+  75% {
+    -webkit-transform: rotate(270deg);
+  }
+  66.67% {
+    -webkit-transform: rotate(240deg);
+  }
+  58.33% {
+    -webkit-transform: rotate(210deg);
+  }
+  50% {
+    -webkit-transform: rotate(180deg);
+  }
+  41.67% {
+    -webkit-transform: rotate(150deg);
+  }
+  33.33% {
+    -webkit-transform: rotate(120deg);
+  }
+  25% {
+    -webkit-transform: rotate(90deg);
+  }
+  16.67% {
+    -webkit-transform: rotate(60deg);
+  }
+  8.33% {
+    -webkit-transform: rotate(30deg);
+  }
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+}
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+  91.67% {
+    transform: rotate(330deg);
+  }
+  83.33% {
+    transform: rotate(300deg);
+  }
+  75% {
+    transform: rotate(270deg);
+  }
+  66.67% {
+    transform: rotate(240deg);
+  }
+  58.33% {
+    transform: rotate(210deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  41.67% {
+    transform: rotate(150deg);
+  }
+  33.33% {
+    transform: rotate(120deg);
+  }
+  25% {
+    transform: rotate(90deg);
+  }
+  16.67% {
+    transform: rotate(60deg);
+  }
+  8.33% {
+    transform: rotate(30deg);
+  }
+  0% {
+    transform: rotate(0deg);
+  }
+}
+#loadingindicatorcontainer {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 80;
+}
+
+/* Live indicator animation */
+.liveindicator {
+  -webkit-animation: pulseShadow 1s linear infinite;
+  -moz-animation: pulseShadow 1s linear infinite;
+  animation: pulseShadow 1s linear infinite;
+}
+@-webkit-keyframes pulseShadow {
+  100% {
+    box-shadow: 0px 0px 0px 0px;
+  }
+  50% {
+    box-shadow: 0px 0px 6px 3px;
+  }
+  0% {
+    box-shadow: 0px 0px 0px 0px;
+  }
+}
+@-moz-keyframes pulseShadow {
+  100% {
+    box-shadow: 0px 0px 0px 0px;
+  }
+  50% {
+    box-shadow: 0px 0px 6px 3px;
+  }
+  0% {
+    box-shadow: 0px 0px 0px 0px;
+  }
+}
+@keyframes pulseShadow {
+  100% {
+    box-shadow: 0px 0px 0px 0px;
+  }
+  50% {
+    box-shadow: 0px 0px 6px 3px;
+  }
+  0% {
+    box-shadow: 0px 0px 0px 0px;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-webkit-keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes fadeout {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes fadeout {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes crossfadein {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-webkit-keyframes crossfadein {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@-moz-keyframes crossfadein {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  95% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/*
+// MARK: LOGGER
+*/
+
+#__onScreenLogging {
+  pointer-events: none
+}

@@ -1,0 +1,1 @@
+define("whitelabelapp/libs/iab/models/ad/base",["whitelabelapp/libs/iab/models/base"],(function(e,i){"use strict";return e.extend({init:function e(i){e.base.call(this),this.creatives=[],this.error=null}})}));

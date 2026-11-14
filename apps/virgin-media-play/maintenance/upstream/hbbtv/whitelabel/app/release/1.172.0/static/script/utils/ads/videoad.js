@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/ads/videoad",["antie/class"],(function(i){"use strict";return i.extend({init:function(i,t,s,n,e){this.urls=i,this.detail=t,this.streamIndex=-1,this.adPosition=s,this.jsonp=!1,this.trackingPoints=[],this.impressions=[],this.clickThroughTrackingPoints=[],this.played=!1,this.startTime=n||0,this.midRollStartTime=e,this.companionAdsItems=[]}})}));

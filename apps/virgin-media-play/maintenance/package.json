@@ -1,0 +1,17 @@
+{
+  "name": "virgin-media-play-legacy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "acorn": "8.19.0"
+  },
+  "scripts": {
+    "build": "node tools/build-tv.mjs",
+    "test": "node tests/release-policy.mjs",
+    "pretest": "npm run build"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

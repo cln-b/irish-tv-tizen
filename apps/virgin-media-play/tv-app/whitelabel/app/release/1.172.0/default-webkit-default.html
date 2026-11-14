@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+
+<head><script>var vmPath=location.href,vmPos=vmPath.lastIndexOf("/whitelabel/app/");if(vmPos<0)vmPos=vmPath.lastIndexOf("/apps/bitmovin/");window.vmRoot=vmPath.slice(0,vmPos)+"/";window.vmTimingProxy=null;window.vmDiagnosticsEnabled=false;window.vmFixedLive720Enabled=false;</script><script src="$WEBAPIS/webapis/webapis.js"></script><script src="../../../../live-timing.js"></script><script src="../../../../quality.js"></script><script src="../../../../avplay.js"></script><script src="../../../../options.js"></script><script src="../../../../remote.js"></script><script src="../../../../polyfill.js"></script>
+  
+  <script type="text/javascript" src="../../../../common/device-support-check.js"></script>
+  <script type="text/javascript" src="../../../../common/loading-failure-fallback.js"></script>
+  <script type="text/javascript" src="../../../../common/force-http-downgrade.js"></script>
+ 
+  <!-- Sentry.io
+  <script type="text/javascript" src="../../../../core/1.16.0/sentry/browser/build/bundle.min.js"></script>
+  -->
+
+   <script type='text/javascript'>
+      var getProtocol= function () {
+        return "https:";
+      }
+      var getQueryParameterValue = function(key){
+      new RegExp(key+'=(.*?)(&|\z)')
+        return (location.search.match(key+'=(.*?)(&|$)')||["",""])[1]
+      }
+      // NOTE See Tizen repo for addition of mux.js for DRM support
+      var requiresOfcomWarning = function () {
+        var customer = getQueryParameterValue('cid');
+        var platform = getQueryParameterValue('platform');
+        var launchType = getQueryParameterValue('lloc');
+        var deeplink = getQueryParameterValue('uvid');
+        var requiredCustomers = [
+          'sonykids', // [SONY-1158]
+          'demand365', 'ketchup', 'yaaas', // [VOD-1286]
+        ];
+        return platform === 'fvp' && launchType !== 'homepage' && deeplink && requiredCustomers.indexOf(customer) > -1;
+      }
+      
+    var v = getQueryParameterValue("version")||'1.172.0';
+    var require = {
+      baseUrl: '',
+      paths: {
+        whitelabelapp: (window.vmRoot+"whitelabel/app/release/") + v + '/static/script',
+          antie: (window.vmRoot+"core/1.16.0/tal/static/script"),
+          "crypto-js": (window.vmRoot+"core/1.16.0/crypto-js")
+          //,"sentry": '//127.0.0.1:18782/core/1.16.0/sentry'
+      },
+      bundles: {
+        'antie/application-bundle': ["antie/application", "antie/widgets/container", "antie/events/keyevent", "antie/events/event", "antie/class", "antie/runtimecontext", "antie/storageprovider", "antie/widgets/widget", "antie/events/focusevent", "antie/events/blurevent", "antie/widgets/componentcontainer", "antie/widgets/button", "antie/widgets/list", "antie/devices/device", "antie/events/focusdelayevent", "antie/events/selectevent", "antie/events/componentevent", "antie/widgets/listitem", "antie/iterator", "antie/events/databoundevent", "antie/events/selecteditemchangeevent", "antie/devices/storage/session", "antie/devices/browserdevice", "antie/historian", "antie/devices/sanitiser", "antie/devices/mediaplayer/mediaplayer", "antie/devices/anim/shared/transitionendpoints", "antie/devices/anim/tween", "antie/devices/parentalguidance/basepghandler", "antie/callbackmanager", "antie/lib/shifty", "antie/videosource", "antie/audiosource", "antie/widgets/component", "antie/widgets/label", "antie/widgets/image", "antie/mediasource", "antie/widgets/horizontallist", "antie/widgets/carousel/binder", "antie/widgets/carousel/keyhandlers/activatefirsthandler", "antie/widgets/carousel/strips/wrappingstrip", "antie/widgets/carousel/navigators/wrappingnavigator", "antie/widgets/carousel/strips/cullingstrip", "antie/widgets/carousel/strips/hidingstrip", "antie/datasource", "antie/widgets/verticallist", "antie/widgets/carousel", "antie/events/mediaevent", "antie/urlbuilder", "antie/widgets/carousel/keyhandlers/keyhandler", "antie/widgets/carousel/strips/widgetstrip", "antie/widgets/carousel/navigators/navigator", "antie/widgets/carousel/strips/utility/widgetcontext", "antie/widgets/carousel/strips/utility/states", "antie/widgets/carousel/strips/utility/visibilitystates", "antie/widgets/carousel/carouselcore", "antie/widgets/carousel/navigators/bookendednavigator", "antie/widgets/carousel/mask", "antie/widgets/carousel/aligners/aligner", "antie/widgets/carousel/orientations/vertical", "antie/widgets/carousel/orientations/horizontal", "antie/events/beforeselecteditemchangeevent", "antie/widgets/carousel/strips/utility/initstate", "antie/widgets/carousel/strips/utility/renderedstate", "antie/widgets/carousel/strips/utility/attachedstate", "antie/formatter", "antie/widgets/carousel/strips/utility/hiddenstate", "antie/widgets/carousel/strips/utility/visiblestate", "antie/widgets/carousel/spinner", "antie/events/beforealignevent", "antie/events/afteralignevent", "antie/widgets/carousel/strips/utility/state", "antie/widgets/carousel/aligners/alignmentqueue", "antie/widgets/keyboard", "antie/events/textchangeevent", "antie/widgets/grid"]
+      },
+      priority: [],
+      callback: function() {}
+    };
+    var a = document.createElement("link"),
+    postersheet = document.createElement("link"),
+      m = document.getElementsByTagName("link")[0];
+    a.rel = 'stylesheet';
+    a.href = (window.vmRoot+"whitelabel/app/release/") + v + '/static/style/base.css';
+    document.head.appendChild(a);
+    postersheet.rel = 'stylesheet';
+    postersheet.href = (window.vmRoot+"whitelabel/app/release/") + v + '/static/style/carousels.css';
+    document.head.appendChild(postersheet);
+    // Get platform name.
+    var platforms = {
+        fvp: "freeviewplay",
+        fsat: "freesat",
+        yv: "youview",
+        ps4: "playstation4",
+        sam: "samsung",
+        lg: "lg"
+      },
+      queryString = location.search,
+      queryStringAbbr = getQueryParameterValue("platform"), // Get Platform Abbreviation
+      platform = platforms[queryStringAbbr] || "Unknown",
+      meta = document.createElement('meta'),
+      configString="",
+      configObj={},
+      appVersion =(location.pathname.match(/release\/(.*)\//)||[])[1]|| "development";
+    meta.setAttribute("data-platform", platform);
+    (meta.id = "platform",
+      document.head.insertAdjacentElement("afterbegin", meta));
+    // Google Analytics call
+    function $_(x) {
+          var campaign_medium = platform;
+          var campaign_source = getQueryParameterValue("lloc");
+      if (x.gaid.indexOf("UA-") > -1) {
+        /* Universal Google Analytics */
+        (function(i, s, o, g, r, a, m) {
+          i['GoogleAnalyticsObject'] = r;
+          i[r] = i[r] || function() {
+            (i[r].q = i[r].q || []).push(arguments)
+          }, i[r].l = 1 * new Date();
+          a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0];
+          a.async = 1;
+          a.src = g;
+          m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga')
+        ga('create', x.gaid || "", 'auto'), 
+        ga('send', 'pageview', {
+          'sessionControl': 'start',
+          'dimension19': platform,
+          'appName': x.appName,
+          'appVersion': appVersion,
+          'campaignMedium' : campaign_medium,
+          'campaignSource': campaign_source
+          });
+        /* End Universal Google Analytics */
+      } else {
+        (function(i, s, o, g, r, a, m) {
+          i.dataLayer = i.dataLayer || [];
+
+          i[r] = i[r] || function() {
+            (i.dataLayer = i.dataLayer || []).push(arguments)
+          }, i[r].l = 1 * new Date();
+          a = s.createElement(o),
+            m = s.getElementsByTagName(o)[0];
+          a.async = 1;
+          a.src = g;
+          m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', "https://www.googletagmanager.com/gtag/js?id=" + (x.gaid || ""), 'gtag')
+        gtag('js', new Date());
+        gtag('set', 'user_properties', {
+          Platform: platform,
+          AppVersion:appVersion
+        });
+        gtag('set', 'campaign_medium', campaign_medium);
+        gtag('set', 'campaign_source', campaign_source);
+        gtag('config', x.gaid);
+      }
+
+      // Sentry
+      /*
+      if (x.dsn) {
+        Sentry.init({
+          dsn: x.dsn,
+          release: v ,
+          environment: 'production'
+        });
+      }
+      */
+      // End Sentry
+
+    }
+    // Use the query-string's cid to get the gaid 
+    var cid = getQueryParameterValue("cid"); // Get Customer
+    var platformenv = getQueryParameterValue("platformenv"); 
+    /* Get GA Tracking ID */
+    (function(x) {
+      x.onreadystatechange = function() {
+        if(x.readyState === 4 && (x.status === 200 || x.status === 0 && /^file:/.test(x.responseURL || location.href))) {
+          configString=x.responseText
+          configObj=JSON.parse(configString)
+          $_(configObj)
+          var loadingElement = document.getElementById("static-loading-screen");
+          var loadingElementLogo = document.getElementById("static-loading-screen-logo");
+          if(!!loadingElement && !!configObj.videoSplash){
+            loadingElement.style.backgroundColor = configObj.themeSettings.colours.splash
+          }else{
+            var background = (window.vmRoot+"whitelabel/assets/splash/background/{cid}.jpg");
+            var logo = (window.vmRoot+"whitelabel/assets/splash/logo/{cid}.png");
+            if(["stg", "dev"].indexOf(platformenv) >= 0 ) {
+                background = (window.vmRoot+"whitelabel/assets/stg/splash/background/{cid}.jpg");
+            }
+            var client = cid;
+            if (requiresOfcomWarning()) client = 'ofcom/' + client + '-ofcom';
+
+            if(loadingElement){
+              loadingElement.style.color = "rgba(255,255,255,0.1)";
+              background=background.replace("{cid}",cid);
+              loadingElement.style.backgroundImage = "url("+background+")";
+              loadingElement.style.backgroundRepeat = "no-repeat";
+              loadingElement.style.backgroundSize = "contain";
+            }
+            if(loadingElementLogo){
+              logo=logo.replace("{cid}",client);
+              loadingElementLogo.style.backgroundImage = "url("+logo+")";
+            }
+          }
+        }
+      };
+      var env = ["stg", "dev"].indexOf(platformenv) >= 0 ? platformenv + "/" : "";
+      var qparams = '?yolo=' + parseInt(Date.now()/(1000*60*5));
+
+      // If you wish to pick a separate app config based on platform, do so here (example below)
+      // if (cid === 'sonykids' && location.href.indexOf('youview') < 0) cid += '-not-youview'; // [SONY-1411]
+
+      x.open('GET', (window.vmRoot+"whitelabel/configs/") + env + cid + '.json' + qparams);
+      x.send(null)
+    })(new XMLHttpRequest())
+
+    /* End Get GA Tracking ID */
+  </script>
+  <!-- End Google Analytics -->
+   
+
+ 
+  <script type='text/javascript' src='../../../../core/1.16.0/tal/static/script/lib/require.js'></script>
+   
+  <link rel='stylesheet' href='../../../../whitelabel/assets/font/icons/icons.css' />
+
+  <script>
+    var antie = {
+      framework: {
+        deviceConfiguration: {"pageStrategy":"html5","modules":{"base":"antie/devices/browserdevice","modifiers":["antie/devices/anim/css3","antie/devices/mediaplayer/shaka","antie/devices/mediaplayer/live/none","antie/devices/data/nativejson","antie/devices/storage/cookie","antie/devices/logging/onscreen","antie/devices/logging/xhr","antie/devices/logging/jstestdriver","antie/devices/exit/closewindow","antie/devices/parentalguidance/appdefaultpghandler"]},"logging":{"level":"none"},"streaming":{"video":{"mediaURIFormat":"%href%","supported":[{"protocols":["http"],"encodings":["h264"],"transferFormat":["hls","plain"],"maximumBitRate":3600,"maximumVideoLines":1080}]},"audio":{"mediaURIFormat":"%href%","supported":[{"protocols":["http"],"encodings":["aac"],"maximumBitRate":192}]}},"input":{"map":{"8":"BACK","13":"ENTER","19":"PLAY_PAUSE","27":"BACK","37":"LEFT","38":"UP","39":"RIGHT","40":"DOWN","47":"HELP","48":"0","49":"1","50":"2","51":"3","52":"4","53":"5","54":"6","55":"7","56":"8","57":"9","72":"FAST_FWD","73":"INFO","74":"PLAY_PAUSE","93":"MENU","112":"SUBTITLE","113":"PLAY","114":"PLAY_PAUSE","115":"STOP","116":"FAST_FWD","117":"REWIND","131":"FAST_FWD","156":"HELP","166":"BACK","170":"SEARCH","179":"PLAY_PAUSE","202":"FAST_FWD","227":"REWIND","228":"FAST_FWD","402":"PLAY_PAUSE","403":"RED","404":"GREEN","405":"YELLOW","406":"BLUE","408":"FAST_FWD","412":"REWIND","413":"STOP","415":"PLAY","417":"FAST_FWD","424":"PREV","425":"NEXT","457":"INFO","460":"SUBTITLE","461":"BACK","463":"PLAY_PAUSE","465":"FAST_FWD","467":"SUBTITLE","473":"FAST_FWD","1028":"AUDIODESCRIPTION","10221":"SUBTITLE","10225":"SEARCH","10232":"PREV","10233":"NEXT","57347":"AUDIODESCRIPTION"}},"accessibility":{"captions":{"supported":["application/ttaf+xml"]}},"layouts":[{"width":960,"height":540,"module":"whitelabelapp/appui/layouts/540p","classes":["browserdevice540p"]},{"width":1280,"height":720,"module":"whitelabelapp/appui/layouts/720p","classes":["browserdevice720p"]},{"width":1920,"height":1080,"module":"whitelabelapp/appui/layouts/1080p","classes":["browserdevice1080p"]}],"networking":{"supportsJSONP":true},"capabilities":[],"statLabels":{},"widgets":{"componentcontainer":{"fade":true}},"brand":"default","model":"webkit"}
+      }
+    };
+  </script>
+
+</head>
+
+<body style='background: #000000;'  >
+   
+
+  <div id='static-loading-screen'>
+  <div id='static-loading-screen-logo'></div>
+    <p>LOADING...</p>
+  </div>
+
+  <div id="app" class="display-none"></div>
+
+  <script type='text/javascript'>
+    // Create live region for screenreaders
+    function createAriaLiveRegion() {
+      if (document.getElementById('sr-live-region')) return;
+
+      var region = document.createElement('div');
+      region.id = 'sr-live-region';
+      region.setAttribute('role', 'status');
+      region.setAttribute('aria-live', 'polite');
+      region.setAttribute('aria-atomic', 'true');
+
+      // Completely outside layout / measurements
+      region.style.position = 'fixed';
+      region.style.top = '-99px';
+      region.style.left = '-99px';
+      region.style.width = '1px';
+      region.style.height = '1px';
+      region.style.overflow = 'hidden';
+      region.style.pointerEvents = 'none';
+
+      document.body.appendChild(region);
+    }
+
+    // Prompt screenreaders to read aloud a message
+    function announce (message) {
+      var region = document.getElementById('sr-live-region');
+      if (!region) return;
+
+      // Clear first so identical messages still fire
+      region.textContent = '';
+      setTimeout(function () {
+        region.textContent = message;
+      }, 50);
+    }
+
+    function waitForConfig() {
+      if(configObj.apiSettings){
+        loadApp()
+      }else{
+        setTimeout(function(){
+          waitForConfig()
+        }, 250);
+      }
+    }
+
+    function forceHttps () {
+      var HTTPS = "https:";
+      var isSecure = getProtocol() === HTTPS;
+      if (isSecure) return;
+
+      var root = window.location.href.split("?")[0].replace("http://", "https://");
+      var search = window.location.search;
+      var hash = window.location.hash;
+      search += "&httpforced=1";
+      var url = root + search + hash;
+      console.log("Forcing HTTPS: " + url);
+      window.location.href = url;
+    }
+
+    function overridePlayer () {
+      var platform = getQueryParameterValue('platform');
+      var playerOverride = configObj.playerModule && (configObj.playerModule[platform] || configObj.playerModule.base);
+      if (!playerOverride) return;
+
+      // Shaka Player requires https (because http breaks Shaka DRM)
+      var usesShaka = playerOverride.indexOf("shaka") > -1;
+      if (usesShaka) forceHttps();
+
+      console.log("Overriding player strategy: " + playerOverride);
+      var modifiers = antie.framework.deviceConfiguration.modules.modifiers.map(function(item) {
+        if (/antie\/devices\/mediaplayer\/(?!live\/)/.test(item))
+          return playerOverride;
+        return item;
+      });
+      antie.framework.deviceConfiguration.modules.modifiers = modifiers;
+    }
+
+    function pickPlayerVersion () {
+      var platform = getQueryParameterValue('platform');
+      if (configObj.playerVersion)
+        window.playerVersion = configObj.playerVersion[platform] || configObj.playerVersion.base;
+    }
+
+    function getPlayerConfig () {
+      var platform = getQueryParameterValue('platform');
+      if (configObj.playerConfig)
+        window.playerConfig = configObj.playerConfig[platform] || configObj.playerConfig.base;
+    }
+
+    function loadApp() {
+      overridePlayer();
+      pickPlayerVersion();
+      getPlayerConfig();
+      
+      require(['whitelabelapp/appui/whitelabelapp'],
+      function(WhiteLabelApp) {
+        var onReady = function() {
+          var staticLoadingScreen = document.getElementById('static-loading-screen');
+          staticLoadingScreen.parentNode.removeChild(staticLoadingScreen);
+          createAriaLiveRegion();
+        };
+
+        new WhiteLabelApp(
+          document.getElementById('app'),
+          'static/style/',
+          'static/img/',
+          onReady,
+          queryString,
+          configObj
+        );
+      });
+    }
+
+    if (requiresOfcomWarning()) {
+      console.log('🔗 Requires Ofcom warning but has deeplink. ⏳ Must wait 5 seconds before starting app...');
+      setTimeout(waitForConfig, 5000);
+    } else {
+      waitForConfig();
+    }
+  </script>
+</body>
+
+</html>

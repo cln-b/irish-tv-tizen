@@ -1,0 +1,1 @@
+define("antie/events/textpagechangeevent",["antie/events/event"],(function(e){"use strict";return e.extend({init:function init(e,t){this.target=e,this.page=t,init.base.call(this,"textpagechange")}})}));

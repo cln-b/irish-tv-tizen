@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/ads/vastmodel",["antie/class"],(function(t){"use strict";return t.extend({init:function(t){for(var i in t)this[i]=t[i]}})}));

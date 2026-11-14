@@ -1,0 +1,21 @@
+{
+  "name": "tg4-plus-legacy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node tools/build.cjs",
+    "test": "node tests/worldwide.cjs"
+  },
+  "dependencies": {
+    "@babel/core": "^8.1.0",
+    "@babel/preset-env": "^8.0.7",
+    "acorn": "^8.19.0",
+    "autoprefixer": "^10.6.2",
+    "core-js-bundle": "^3.51.0",
+    "postcss": "^8.5.32",
+    "whatwg-fetch": "^3.6.20"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

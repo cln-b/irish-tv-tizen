@@ -1,0 +1,1 @@
+define("whitelabelapp/libs/iab/models/ad/wrapper",["whitelabelapp/libs/iab/models/base"],(function(e,i){"use strict";return e.extend({init:function(){}})}));

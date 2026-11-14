@@ -1,0 +1,1 @@
+define("whitelabelapp/services/playback/trackmanager",["antie/runtimecontext","whitelabelapp/services/playback/handlers/trackmanagement/shakatrackmanagementhandler","whitelabelapp/services/playback/handlers/trackmanagement/nativetrackmanagementhandler"],(function(e,a,t){"use strict";return e.getCurrentApplication().getDevice().getMediaPlayer().shaka?new a:new t}));

@@ -1,0 +1,1 @@
+define("antie/devices/anim/css3/existingtransitiondefinition",["antie/devices/anim/css3/transitiondefinition"],(function(i){"use strict";return i.extend({init:function init(i){var t,n,e,s,a;for(init.base.call(this),t=i.getProperties(),n=i.getDurations(),e=i.getDelays(),s=i.getTimingFns(),a=0;a!==t.length;a+=1)this.setProperty(t[a],{duration:n[a],timingFn:s[a],delay:e[a]})}})}));

@@ -1,0 +1,1 @@
+define("whitelabelapp/libs/iab/models/base",["whitelabelapp/services/service","whitelabelapp/libs/iab/utils/parser"],(function(e,n){"use strict";return e.extend({parseXMLFromString:function(e){return n.parseXMLFromString(e)},findElementsInDocumentByTag:function(e,i){return n.findElementsInDocumentByTag(e,i)}})}));

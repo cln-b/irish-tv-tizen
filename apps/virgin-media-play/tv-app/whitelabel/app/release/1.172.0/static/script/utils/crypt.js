@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/crypt",["antie/class","antie/runtimecontext","crypto-js/crypto-js"],(function(t,n,e){return new(t.extend({init:function(){this.opener="nc78rfhi9qxefwef903rnjc309cx4deds"},encrypt:function(t){return e.AES.encrypt(t,this.opener).toString()},decrypt:function(t){return e.AES.decrypt(t.toString(),this.opener).toString(e.enc.Utf8)}}))}));

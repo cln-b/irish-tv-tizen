@@ -1,0 +1,1 @@
+define("antie/devices/mediaplayer/live/none",["antie/devices/device","antie/devices/mediaplayer/mediaplayer"],(function(e,i){"use strict";e.prototype.getLivePlayer=function(){return null},e.prototype.getLiveSupport=function(){return i.LIVE_SUPPORT.NONE}}));

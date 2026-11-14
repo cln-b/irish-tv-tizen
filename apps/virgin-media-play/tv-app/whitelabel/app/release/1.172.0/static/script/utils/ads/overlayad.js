@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/ads/overlayad",["antie/class"],(function(i){"use strict";return i.extend({init:function(i,t,s,n,e){this.urls=i,this.detail=t,this.adPosition=s,this.trackingPoints=[],this.impressions=[],this.clickThroughTrackingPoints=[],this.played=!1,this.startTime=n||0,this.duration=e||5,this.showed=!1}})}));

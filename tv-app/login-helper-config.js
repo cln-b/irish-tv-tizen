@@ -1,1 +1,0 @@
-window.__rteLoginHelper={"url":"","key":""};

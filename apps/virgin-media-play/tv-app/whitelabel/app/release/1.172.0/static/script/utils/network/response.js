@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/network/response",["antie/class","antie/runtimecontext"],(function(n,t){"use strict";return n.extend({init:function(n,t){n&&t&&(this.success="function"==typeof n?n:null,this.failure="function"==typeof t?t:null)},getCallbacks:function(){var n=this;return{onLoad:function(t){n.success&&n.success(t)},onError:function(t){n.failure&&n.failure(t)}}}})}));

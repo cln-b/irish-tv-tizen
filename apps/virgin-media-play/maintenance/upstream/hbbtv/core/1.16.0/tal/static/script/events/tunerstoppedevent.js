@@ -1,0 +1,1 @@
+define("antie/events/tunerstoppedevent",["antie/events/event"],(function(e){"use strict";return e.extend({init:function init(){init.base.call(this,"tunerstopped")}})}));

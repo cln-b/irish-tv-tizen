@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/ads/vmapmodel",["antie/class"],(function(e){"use strict";return e.extend({init:function(e){this.adBreaks=e}})}));

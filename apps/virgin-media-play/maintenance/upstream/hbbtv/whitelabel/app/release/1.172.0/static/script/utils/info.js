@@ -1,0 +1,1 @@
+define("whitelabelapp/utils/info",[],(function(){"use strict";return{version:"1.172.0",minBitmovinVersion:"1.26.1"}}));

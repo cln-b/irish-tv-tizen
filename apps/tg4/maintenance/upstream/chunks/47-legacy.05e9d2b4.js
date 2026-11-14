@@ -1,0 +1,2 @@
+"use strict";(self["webpackChunktg4_web_app"]=self["webpackChunktg4_web_app"]||[]).push([[47],{2047:(e,t,r)=>{r.r(t),r.d(t,{default:()=>c});var s=function(){var e=this,t=e._self._c;e._self._setupProxy;return t("router-view")},u=[],l=r(6349);const n=(0,l.pM)({__name:"Profile",setup(e){return{__sfc:!0}}}),_=n;var p=r(9099),a=(0,p.A)(_,s,u,!1,null,null,null);const c=a.exports}}]);
+//# sourceMappingURL=47-legacy.05e9d2b4.js.map
