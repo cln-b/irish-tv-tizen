@@ -16,6 +16,22 @@ The output goes into `build/vestel`, with empty helper settings. The current fro
 
 `tools/build.mjs` transpiles the JavaScript to ES5 and applies the upstream code patches. The files in `widget` handle routing, layout, polyfills and older Tizen playback behaviour. Generated JavaScript has JSHint skip comments because Studio’s checker stalls on the large bundles.
 
+## PlayReady on Tizen 2.4
+
+The legacy WebKit EME path only produces a licence challenge when the widget
+declares Samsung's DRM privilege:
+
+```xml
+<tizen:privilege name="http://developer.samsung.com/privilege/drmplay"/>
+```
+
+Without it `webkitGenerateKeyRequest` succeeds but the `webkitkeymessage`
+event has empty `message` and `initData`, so Shaka posts a zero-length licence
+body and playback stops with media error 3. The privilege is added to the
+vestel `config.xml` by `tools/build.mjs`. The licence request itself is left
+alone: Shaka reads the challenge and headers straight from the CDM's
+`PlayReadyKeyMessage`.
+
 ## Update the RTÉ frontend
 
 Capture https://www.rte.ie/rpng-static/ctv/vestel in a browser and export a HAR with response content. Include the public translation dictionary. Keep the HAR outside Git; it may contain account data.
@@ -51,4 +67,4 @@ The bundled frontend won’t update itself. RTÉ’s live services and external 
 
 The automated login tests use fake session data. We still need to check that a real signed-in session renews after 24 hours on the TV.
 
-The prebuilt app includes the tested channel-logo fixes and early config/label downloads. Startup remains slow. The failed saved-account Home gate was removed. See [STARTUP.md](STARTUP.md) for the investigation and test results.
+The prebuilt app includes the tested channel-logo fixes and early config/label downloads. Startup remains slow. The failed saved-account Home gate was removed. See [RTE-STARTUP.md](/slop/RTE-STARTUP.md) for the investigation and test results.

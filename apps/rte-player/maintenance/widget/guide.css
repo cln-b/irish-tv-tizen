@@ -65,3 +65,44 @@ a.focusable-strip-item_focusable-strip-item__1Pv9E {
     -webkit-flex: none;
     flex: none;
 }
+
+/* Captions are laid out with translate(-50%, var(--subtile-y)), but that
+   variable is never set, so this WebKit discards the transform and each
+   caption starts at the centre of the screen. Centre them explicitly and
+   stop the rule from shifting the text block a second time. */
+.shaka-text-container > div > span:not(.shaka-text-wrapper) {
+    left: 50% !important;
+    bottom: 20px !important;
+    -webkit-transform: translateX(-50%) !important;
+    transform: translateX(-50%) !important;
+    text-align: center !important;
+}
+.shaka-text-container .shaka-text-region {
+    left: 50% !important;
+    bottom: 170px !important;
+    width: 95% !important;
+    -webkit-transform: translateX(-50%) !important;
+    transform: translateX(-50%) !important;
+    text-align: center !important;
+}
+.shaka-text-container .shaka-text-region span {
+    -webkit-transform: none !important;
+    transform: none !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    text-align: center !important;
+}
+
+/* In the change-channel overlay this replaced element falls back to its
+   intrinsic 240px width inside the 364px card on Tizen 2.4. Make it fill
+   the tile instead of leaving roughly a third of the artwork unused. */
+[class*="focusable-live-channels-strip-item_thumbnail-image"] {
+    display: block !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    -webkit-flex: 0 0 100% !important;
+    flex: 0 0 100% !important;
+}

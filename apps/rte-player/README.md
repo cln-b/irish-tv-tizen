@@ -1,8 +1,6 @@
 # RTÉ Player for older Samsung TVs
 
-A patched RTÉ Player for Tizen 2.4, tested on a Samsung UE40K5500.
-
-Download the unsigned WGT from [release packages](../../RELEASING.md). The prebuilt app files are in `tv-app`. This is release **1.1**, based on RTÉ frontend **0.170.54075_2**. The Tizen manifest uses **1.1.0**.
+A patched RTÉ Player for Tizen 2.4, based on RTÉ frontend `0.170.54075_2`, tested on a Samsung UE40K5500.
 
 ## Sign-in helper
 
@@ -21,10 +19,11 @@ The supplied `wrangler.example.json` disables Worker observability. You can turn
 
 ## Install
 
-You’ll need Tizen Studio with the Samsung TV and certificate extensions, and developer mode enabled on the TV.
+You’ll need [Tizen Studio](https://download.tizen.org/sdk/Installer/tizen-sdk_10.0/) with `TV Extensions-XX.X` and `Samsung Certificate Extension` from Package Manager, and developer mode enabled on the TV.
 
-1. Import the release WGT as a Tizen web project using the packaged-application import option.
-2. Edit `login-helper-config.js` with your Worker URL and the same key you saved in Cloudflare.
+1. Download the unsigned WGT from [releases](https://www.github.com/cln-b/irish-tv-tizen/releases).
+1. Under File > Import select the release WGT as a Tizen > Tizen Project.
+1. Edit `login-helper-config.js` with your Worker URL and the same key you saved in Cloudflare.
 
     ```javascript
     window.__rteLoginHelper = {
@@ -33,18 +32,27 @@ You’ll need Tizen Studio with the Samsung TV and certificate extensions, and d
     };
     ```
 
-3. Create or select your Samsung TV profile in Certificate Manager. The distributor certificate must include your TV’s DUID.
-4. Select the profile and choose **Build Signed Package**.
-5. Connect the TV in Device Manager, select it as the target, then choose **Run As → Tizen Web Application**.
-6. Open **Sign In** in the app and enter the pairing code at https://www.rte.ie/connect.
+1. Under Tools > Certificate Manager create a Samsung TV profile. The distributor certificate must include your TV’s DUID.
+: run
+    ```bash
+    /path/to/tizen-studio/tools/sdb connect <TV IP address>
+    /path/to/tizen-studio/tools/sdb shell 0 getduid
+    ABCDEFGH1IJK2 # your DUID
+    ```
+1. Connect the TV in Device Manager, select it as the target, then right click the project in the sidebar and choose **Run As → Tizen Web Application**.
+1. Scan the QR code or enter the pairing code at https://www.rte.ie/connect to login.
 
-Keep your configured project and signed WGT private because they contain your helper key. If you change the key in Cloudflare, update the app’s config and sign and install it again.
+Keep your configured project private because it contains your helper key. If you change the key in Cloudflare, update the app’s config and sign and install it again.
 
 **Clear storage** resets the app’s saved data. You can then pair it again through Sign In.
 
 ## Known issues
 
-Startup can take 30–40 seconds on the tested TV, with another loading cycle as sign-in completes. This remains unresolved.
+Startup can take 30–40 seconds on the TV, this is due to the app waiting for a successful sign in. The measurement notes are in [RTE-STARTUP.md](../../slop/RTE-STARTUP.md).
+
+Live DAI ad insertion is disabled on this build as it caused the app to lock up. Live playback uses the normal DASH stream; VOD ad behaviour is unchanged.
+
+A rejected PlayReady licence response (Shaka `6008` / `LICENSE RESPONSE REJECTED`) can leave the legacy EME session unusable. A full app restart is currently the only known fix. An automatic retry was tested but not shipped because it produced `HTTP_ERROR 1002` on live.
 
 Channel-logo overrides come from RTÉ’s current configuration. Regular logos use the service’s PNG version, with an SVG fallback, because some newer SVGs render blank in old WebKit.
 

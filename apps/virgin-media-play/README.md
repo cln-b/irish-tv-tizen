@@ -20,4 +20,4 @@ On-demand playback was confirmed with smooth picture/sound. Local continue/resum
 
 **Subtitles remain unresolved**. The options panel's “No subtitles detected” message is not proof that the programme has no captions. The native callback path does not yet handle every caption type. The live picture-quality value is read-only; manual choices currently apply to on-demand.
 
-The broadcaster UI snapshot is SimpleStream app **1.172.0**, core **1.16.0**. APIs and DRM services can change independently. See [maintenance](maintenance/README.md) and the [shared status notes](../../docs/STATUS.md).
+The broadcaster UI snapshot is SimpleStream app **1.172.0**, core **1.16.0**. APIs and DRM services can change independently. See [maintenance](maintenance/README.md) and the [shared status notes](../../slop/STATUS.md).

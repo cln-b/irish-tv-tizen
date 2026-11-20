@@ -63,6 +63,103 @@ function legacyJS(text, name) {
             'window.rteWidget.route().$1');
         text = text.replace(/\w+\(\)\.BASE_PATH\+"\/(onetrust\.js|webOSTVjs-1\.2\.8\/webOSTV\.js)"/g, '"./$1"');
     }
+    if (name.includes('_app-')) {
+        // Opening the settings panel must not interrupt playback. The panel is
+        // an overlay; captions and audio can be changed while the video runs.
+        text = once(text,
+            'onHandleSettings:function(){console.log("[Player] onHandleSettings call player.pause()",!Ze),et||(Ze?gu.play():gu.pause(),ie(!Ze,!1),lt&&Qe(!Ze))}',
+            'onHandleSettings:function(){console.log("[Player] onHandleSettings",!Ze),et||(ie(!Ze,!1),lt&&Qe(!Ze))}');
+        // Mirror the desktop Shaka player's quality picker in the settings
+        // panel: Auto plus one button per video height in the manifest.
+        const quality = `
+var rteQualityHeights=function(tracks){var heights=[],i,t;for(i=0;i<tracks.length;i++){t=tracks[i];if(t.height&&heights.indexOf(t.height)<0)heights.push(t.height)}heights.sort(function(a,b){return b-a});return heights};
+var RteQuality=function(props){
+    var setFocus=props&&props.setFocus;
+    var context=(0,s.useContext)(Qo),player=context.player,state=(0,s.useState)(null),view=state[0],setView=state[1];
+    (0,s.useEffect)(function(){
+        if(!player||!player.getVariantTracks)return;
+        var update=function(){
+            var tracks=player.getVariantTracks()||[],heights=rteQualityHeights(tracks),active=null,auto=true,i;
+            for(i=0;i<tracks.length;i++){if(tracks[i].active){active=tracks[i];break}}
+            try{var instance=player.getPlayerInstance&&player.getPlayerInstance();if(instance&&instance.getConfiguration)auto=!!instance.getConfiguration().abr.enabled}catch(ignored){}
+            var next={auto:auto,height:active?active.height:null,heights:heights};
+            setView(function(previous){
+                if(previous&&previous.auto===next.auto&&previous.height===next.height&&previous.heights.join(',')===next.heights.join(','))return previous;
+                return next;
+            });
+        };
+        update();
+        var timer=setInterval(update,1500);
+        return function(){clearInterval(timer)};
+    },[player]);
+    if(!view||!view.heights.length)return null;
+    var refocus=function(key){
+        var attempts=0;
+        var tick=function(){
+            attempts++;
+            var popup=document.querySelector('[class*=settings-popup]');
+            if(!popup||String(popup.className).indexOf('-opened')<0)return;
+            if(!popup.querySelector('[class*=is-focused]')&&setFocus){try{setFocus(key);}catch(ignored){}}
+            if(attempts<24)setTimeout(tick,150);
+        };
+        tick();
+    };
+    var select=function(height){
+        var prevFocus=document.activeElement;
+        var tracks=player.getVariantTracks()||[],active=null,language=null,pick=null,i;
+        for(i=0;i<tracks.length;i++){if(tracks[i].active){active=tracks[i];break}}
+        language=active&&active.language;
+        for(i=0;i<tracks.length;i++){if(tracks[i].height===height&&(!language||tracks[i].language===language)){pick=tracks[i];break}}
+        if(!pick){for(i=0;i<tracks.length;i++){if(tracks[i].height===height){pick=tracks[i];break}}}
+        if(!pick)return;
+        try{player.editConfig({abr:{enabled:false}});}catch(ignored){}
+        try{player.setVariantTrack(pick,2);}catch(ignored){}
+        setView({auto:false,height:height,heights:view.heights});
+        refocus("quality-"+height,prevFocus);
+    };
+    var buttons=[(0,r.jsx)(En,{key:"auto",id:"quality-auto",focusKey:"quality-auto",size:"auto",active:view.auto,style:{margin:"0 6px 12px"},onEnterPress:function(){
+        var prevFocus=document.activeElement;
+        try{player.editConfig({abr:{enabled:true}});}catch(ignored){}
+        setView({auto:true,height:view.height,heights:view.heights});
+        refocus("quality-auto",prevFocus);
+    },children:"Auto"})];
+    for(var i=0;i<view.heights.length;i++){(function(height){
+        buttons.push((0,r.jsx)(En,{key:String(height),id:"quality-"+height,focusKey:"quality-"+height,size:"auto",active:!view.auto&&view.height===height,style:{margin:"0 6px 12px"},onEnterPress:function(){select(height)},children:height+"p"}));
+    }(view.heights[i]))}
+    return (0,r.jsxs)("div",{id:"quality-picker",style:{textAlign:"center",marginBottom:"16px"},children:[
+        (0,r.jsx)("div",{style:{color:"#fff",fontFamily:"'IBM Plex Sans Regular',sans-serif",fontSize:"24px",lineHeight:"34px",marginBottom:"10px"},children:"Quality"}),
+        (0,r.jsx)("div",{style:{maxWidth:"576px",margin:"0 auto"},children:buttons})
+    ]});
+};
+`;
+        text = once(text, 'var gs,ms,ys=function(e){', quality + 'var gs,ms,ys=function(e){');
+        text = once(text,
+            '(0,r.jsx)(En,{ariaLabelButton:!0,focusKey:"settings-popup-button"',
+            '(0,r.jsx)(RteQuality,{key:"quality-menu",setFocus:I}),(0,r.jsx)(En,{ariaLabelButton:!0,focusKey:"settings-popup-button"');
+        // The settings button in the player controls is gated on hasSettings,
+        // which upstream only enables when the stream has subtitles, audio
+        // description or signing. Our quality picker lives in that panel, so
+        // keep it available for every stream.
+        text = once(text,
+            'i&&i.filter((function(e){return"en"!=e.language&&"und"!=e.language})).length>0||r.length>0||(null===h||void 0===h||null===(e=h.avaliableSettings)||void 0===e?void 0:e.isSigned)?c(!0):c(!1)',
+            'c(!0)');
+        // Changing quality restarts playback; the player's play handler would
+        // then pull focus back to the play button. Keep focus in the settings
+        // panel while it is open.
+        text = once(text,
+            '!xn.current&&Nn("button-play-player")',
+            '!xn.current&&!document.querySelector("[class*=settings-popup][class*=-opened]")&&Nn("button-play-player")');
+        // This 2016 WebKit locks up when it inserts a DAI ad pod: the ad
+        // segment request never completes and the live buffer drains. The
+        // live-event refresh uses Yw/Zw to decide whether to ask RTÉ for the
+        // ssai_on feed and to hand a Google SSAI key to the player. Disable
+        // both decisions so the app stays on the ordinary live MPD, which
+        // carries its own "programme resumes shortly" filler at ad breaks.
+        if (brand === 'vestel') {
+            text = once(text, 'function Yw(e,t,n){', 'function Yw(e,t,n){return!1;');
+            text = once(text, 'function Zw(e,t,n){', 'function Zw(e,t,n){return!1;');
+        }
+    }
     if (name === 'fetch.js') {
         // Resolve relative WGT paths before applying the polyfill's file-status rule.
         text = once(text,"request.url.indexOf('file://') === 0 && (xhr.status < 200 || xhr.status > 599)",
@@ -82,6 +179,16 @@ function legacyJS(text, name) {
             'c=typeof Intl!=="undefined"&&Intl.Collator?new Intl.Collator:{compare:function(a,b){return a.localeCompare(b)}},');
     }
     if (brand === 'vestel' && name.includes('/play-')) {
+        // Live DAI pods hang this 2016 WebKit (the ad segment XHR never
+        // completes while the CDN serves it immediately). RTÉ already has a
+        // non-DAI live feed, and the SMIL flag above asks for it; also stop the
+        // player from starting DAI/SSAI or building a live ad playlist itself.
+        // VOD ad behaviour is left unchanged.
+        text = once(text,
+            'adv:{enabled:!($n.reloadAttempt>0)&&(_e.asset.isLive?ln:_e.adEnabled),ssaiEnabled:_e.isSsaiEnabled,daiEnabled:_e.isDaiEnabled,googleSsaiKey:_e.googleSsaiKey,url:W?function',
+            'adv:{enabled:_e.asset.isLive?!1:_e.adEnabled,ssaiEnabled:_e.asset.isLive?!1:_e.isSsaiEnabled,daiEnabled:!1,googleSsaiKey:_e.asset.isLive?"":_e.googleSsaiKey,url:_e.asset.isLive?"":W?function');
+        text = once(text, 'cuePoints:W?_e.toCuePointsArray():[]',
+            'cuePoints:_e.asset.isLive?[]:W?_e.toCuePointsArray():[]');
         // Use the hosted player's exit routine on hardware Return as well. It
         // clears streamingInfo before another station tries to initialise.
         text = once(text,'hn=function(){var e,n;An("exitFromPlayer")',
@@ -124,7 +231,7 @@ function legacyJS(text, name) {
             // traps focus in an invisible popup when the service declines a code.
             const signInDialog = 'Xe.actionOpen&&Xe.bySettingsButton&&!G.isSignedIn&&!G.associationCode&&!Yi&&' +
                 '(0,i.jsx)(a.fz,{defaultFocused:true,title:"RTÉ Player sign in",' +
-                'description:G.associationAccountCodeError?' + JSON.stringify(loginHelper ?
+                'description:G.associationAccountCodeError?' + JSON.stringify(loginHelper && (loginHelper.url || loginHelper.key) ?
                     'Sign in failed. Check your internet connection and login helper configuration, then try again.' :
                     'RTÉ could not issue a pairing code for this TV app.') + ':"Requesting a pairing code from RTÉ…",' +
                 'labelRightButton:"Back",onClickRightButton:$i}),';
@@ -142,7 +249,7 @@ function legacyJS(text, name) {
             text = once(text,'var f={servers:n};i&&',
                 'var f={servers:n};if(window.rteLive.legacyEme)' +
                 'f.preferredKeySystems=["com.microsoft.playready"];' +
-                'if(window.rteLive.active())this.player.configure({restrictions:{maxHeight:576},preferredAudioChannelCount:2,preferredVideoCodecs:["avc1"]});i&&');
+                'if(window.rteLive.active())this.player.configure({preferredAudioChannelCount:2,preferredVideoCodecs:["avc1"]});i&&');
         }
         // Kotlin constructs Unicode regexps at runtime for programme slugs and
         // for RTÉ's stream URL check. Compile their original Unicode semantics.
@@ -253,7 +360,7 @@ write('config.xml', `<?xml version="1.0" encoding="UTF-8"?>
     <tizen:profile name="tv-samsung"/>
     <access origin="*" subdomains="true"/>
     <tizen:privilege name="http://tizen.org/privilege/internet"/>
-    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>${brand === 'vestel' ? '\n    <tizen:privilege name="http://developer.samsung.com/privilege/drmplay"/>' : ''}
     <tizen:setting screen-orientation="landscape" context-menu="disable" hwkey-event="enable"/>
 </widget>\n`);
 write(icon,fs.readFileSync(path.join(root,'widget',icon)));

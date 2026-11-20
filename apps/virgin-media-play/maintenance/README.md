@@ -21,4 +21,4 @@ python3 scripts/package-release.py --app virgin-media-play
 
 Update `../VERSION` for a release. The builder reads it when generating config.xml. After updating upstream code, recheck signing, pairing, VOD, Return, resume, quality changes and actual picture/sound across ads. Syntax checks and advancing native clocks do not establish reliable playback.
 
-Live multi-period/ad streaming and subtitles are unresolved. Do not restore automatic native reopens or fresh-stream retries: hardware tests showed repeated content and extra pre-roll pods. Detailed private captures/HARs/certificates are deliberately excluded. See `../../../docs/STATUS.md` and the investigation notes for follow-up.
+Live multi-period/ad streaming and subtitles are unresolved. Do not restore automatic native reopens or fresh-stream retries: hardware tests showed repeated content and extra pre-roll pods. Detailed private captures/HARs/certificates are deliberately excluded. See [STATUS.md](../../../slop/STATUS.md) and the investigation notes for follow-up.

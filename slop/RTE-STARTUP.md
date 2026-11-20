@@ -39,3 +39,9 @@ The root configuration gate can unmount/rebuild Layout when account readiness ch
 - The checked maintenance build has been copied into the public `tv-app`, with empty helper settings and the current banner retained in both the prebuilt app and maintenance inputs. The source and unsigned release files have been regenerated locally. No commit, push or publication was made.
 
 No playback engine, DRM, ad handoff, navigation, account relay or sign-in response caching was changed.
+
+## 20 November CDP follow-up
+
+A bounded CDP reload on the physical TV measured `load` at 6.7–8.1 s, `DOMContentLoaded` at 4.7–7.7 s and `domInteractive` at 2.1–6.0 s. The slowest individual requests were the IMA SDK scripts (3.9–4.3 s), the 2 MB `_app` chunk (3.9–4.3 s), the early config/label GETs (3.5–3.7 s), the index chunk (2.4 s) and the stylesheet (2.0 s). The OneTrust banner request took about 5 s and started around 15 s. On the live route the MPD was not requested until about 19 s after the reload, before segment and licence requests.
+
+Temporary instrumentation also showed a long wave of thePlatform catalogue feeds during Home, with a second wave after sign-in completed. This is consistent with the user-visible 30–40 s delay: this TV spends several seconds parsing the large upstream ES5 bundles and then waits on external SDK, consent, account and catalogue requests. It is not explained by the DRM privilege, caption CSS, Settings patch or live DAI guard. Repeated CDP reloads also triggered the known legacy PlayReady 6008 failure, so those reload timings are boot measurements only, not a recommended playback test.

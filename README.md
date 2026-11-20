@@ -3,15 +3,12 @@
 Patched Tizen 2.4 apps for **RTÉ Player**, **Virgin Media Play** and **TG4+**, tested on a Samsung UE40K5500.
 
 <div align="center">
-   <img width="640" height="360" src="./screenshot.png" alt="RTÉ Player homepage">
+   <img width="640" height="360" src="./screenshot.png" alt="App screenshots">
 </div>
-
-> [!IMPORTANT]
-> Never mind the RTÉ Player broke overnight
 
 | App | On demand | Live | Sign-in | Subtitles | Notes | Setup |
 | --- | --- | --- | --- | --- | --- | --- |
-| ~~RTÉ Player~~ | ~~✅~~ | ~~✅~~ | ~~✅*~~ | ~~✅~~ | ~~Very slow to load, occasional crashes loading boxsets~~ | ~~[README](apps/rte-player/README.md)~~ |
+| RTÉ Player | ✅ | ✅ | ✅* | ✅ | Very slow to load, occasional restart required | [README](apps/rte-player/README.md) |
 | Virgin Media Play | ✅ | ❗ | ✅ | ❌ | Live channels skipping, struggles with ad transitions | [README](apps/virgin-media-play/README.md) |
 | TG4+ | ✅ | ❌ | ✅ | ❌ | Live DRM issues | [README](apps/tg4/README.md) |
 
@@ -43,7 +40,7 @@ scripts/package-release.py
 docs/                    # current limitations and investigation handoff
 ```
 
-See [release packaging](RELEASING.md), [current playback status](docs/STATUS.md), and each app's maintenance README. This repository includes third-party broadcaster/player frontend code needed by the packaged apps; their original notices and ownership remain applicable. The patches do not bypass DRM, sign-in or regional restrictions.
+See [release packaging](RELEASING.md), [current playback status](slop/STATUS.md), and each app's maintenance README. This repository includes third-party broadcaster/player frontend code needed by the packaged apps; their original notices and ownership remain applicable. The patches do not bypass DRM, sign-in or regional restrictions.
 
 # AI disclaimer
-I do not claim to have achieved anything here. I was just trying to get the players working on my parents' old TV without hooking up a laptop via HDMI. RTÉ Player was working but broke the next day. You get what you pay (or don't pay) for
+I do not claim to have personally achieved anything here. I was just trying to get the players working on my parents' old TV without hooking up a laptop via HDMI. Could someone more knowledgable than me do this better without AI? 100%
