@@ -9,7 +9,7 @@ Patched Tizen 2.4 apps for **RTÉ Player**, **Virgin Media Play** and **TG4+**, 
 | App | On demand | Live | Sign-in | Subtitles | Notes | Setup |
 | --- | --- | --- | --- | --- | --- | --- |
 | RTÉ Player | ✅ | ✅ | ✅* | ✅ | Very slow to load, occasional restart required | [README](apps/rte-player/README.md) |
-| Virgin Media Play | ✅ | ❗ | ✅ | ❌ | Live channels skipping, struggles with ad transitions | [README](apps/virgin-media-play/README.md) |
+| Virgin Media Play | ✅ | ❗ | ✅ | ✅ | Live channels skipping, struggles with ad transitions | [README](apps/virgin-media-play/README.md) |
 | TG4+ | ✅ | ❌ | ✅ | ❌ | Live DRM issues | [README](apps/tg4/README.md) |
 
 Each app has its own `tv-app/config.xml`, icons, bundled frontend, and `maintenance` directory. RTÉ sign-in requires a small Cloudflare Worker.

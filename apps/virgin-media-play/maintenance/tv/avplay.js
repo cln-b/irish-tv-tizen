@@ -62,20 +62,94 @@
         var servers=value && value.drm && value.drm.servers;
         if (servers && servers['com.microsoft.playready']) driver.vmLicenseServer=servers['com.microsoft.playready'];
     }
-    function clearSubtitle(driver) {
+    function preference(on) {
+        try {
+            if(typeof localStorage==='undefined')return false;
+            if(typeof on==='boolean')localStorage.setItem('vm-subtitles',on?'on':'off');
+            return localStorage.getItem('vm-subtitles')==='on';
+        } catch (ignore) { return false; }
+    }
+    function clearCaptionElement(element) {
+        if(!element)return;
+        if(element.firstChild){while(element.firstChild)element.removeChild(element.firstChild);}
+        else if(element.children){while(element.children.length)element.removeChild(element.children[element.children.length-1]);}
+        element.textContent='';
+    }
+    function cancelHide(driver) {
         clearTimeout(driver.vmSubtitleTimer);
-        if(driver.vmSubtitleElement)driver.vmSubtitleElement.textContent='';
+        driver.vmSubtitleTimer=null;
+    }
+    function hideCaption(driver) {
+        cancelHide(driver);
+        clearCaptionElement(driver.vmSubtitleElement);
+        driver.vmSubtitleRendered=null;
+    }
+    function clearSubtitle(driver) { hideCaption(driver); }
+    function paintCaption(driver) {
+        var element=driver.vmSubtitleElement;
+        if(!element)return;
+        if(!driver.vmTextVisible){hideCaption(driver);return;}
+        var image=driver.vmSubtitleImage,key=(image?'image:'+image:'text:'+(driver.vmSubtitleCue||''));
+        if(driver.vmSubtitleRendered===key)return;
+        if(image){
+            clearCaptionElement(element);
+            var node=document.createElement('img');
+            node.src=image;node.style.cssText='max-width:100%;max-height:360px';
+            element.appendChild(node);
+        } else {
+            // Rolling captions replace the text in place. Clearing the element
+            // first produces a visible blank frame between every added word.
+            element.textContent=driver.vmSubtitleCue||'';
+        }
+        driver.vmSubtitleRendered=key;
+    }
+    function imageSource(value) {
+        var match=/^\s*<img[^>]+src=["']([^"']+)["']/i.exec(value);
+        var source=match?match[1]:value.trim();
+        return /^(data:image\/|https?:\/\/)/i.test(source)?source:null;
+    }
+    function markTextAvailable(driver) {
+        if(driver.vmTextAvailable)return;
+        driver.vmTextAvailable=true;console.log('VM native subtitle data received');
+        if(window.vmNativeOptions&&window.vmNativeOptions.refresh)window.vmNativeOptions.refresh();
+        if(driver.vmTextWanted&&!driver.vmTextVisible){
+            var list=tracks(driver,true);
+            if(list.length)selectText(driver,list[0].id);
+        }
     }
     function subtitle(driver, milliseconds, value, type) {
-        if(String(type||'0')!=='0')return;
-        var text=String(value||'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').trim();
-        // Decode entities without putting upstream markup in the document.
-        var decoder=document.createElement('textarea');decoder.innerHTML=text;text=decoder.value||decoder.textContent||text;
-        clearSubtitle(driver);driver.vmSubtitleCue=text;
-        if(!text)return;
-        if(!driver.vmTextAvailable){driver.vmTextAvailable=true;console.log('VM native subtitle data received');if(window.vmNativeOptions&&window.vmNativeOptions.refresh)window.vmNativeOptions.refresh();}
-        if(driver.vmTextVisible)driver.vmSubtitleElement.textContent=text;
-        driver.vmSubtitleTimer=setTimeout(function(){driver.vmSubtitleCue='';clearSubtitle(driver);},Math.max(100,Number(milliseconds)||3000));
+        var raw=String(value||''),kind=String(type||'0');
+        console.log('VM subtitle callback type='+kind+' length='+raw.length+' duration='+milliseconds+' position='+Math.round(current(driver)*1000)/1000);
+        // Samsung uses 0 for text and 1 for image captions. Inspect either kind
+        // before deciding that a programme has no usable subtitles.
+        var image=kind==='1'?imageSource(raw):null;
+        var text=image?'':String(raw).replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').trim();
+        if(!image){
+            // Decode entities without putting upstream markup in the document.
+            var decoder=document.createElement('textarea');decoder.innerHTML=text;text=decoder.value||decoder.textContent||text;
+        }
+        cancelHide(driver);driver.vmSubtitleCue=text;driver.vmSubtitleImage=image;
+        if(!text&&!image){
+            // A short gap between rolling TTML samples must not blank the line.
+            driver.vmSubtitleTimer=setTimeout(function(){driver.vmSubtitleCue='';driver.vmSubtitleImage=null;hideCaption(driver);},250);
+            return;
+        }
+        markTextAvailable(driver);
+        if(driver.vmTextVisible)paintCaption(driver);
+        // Native callbacks report only the current rolling sample, often 120-800ms.
+        // Keep the line for at least 1.2s so the next sample can replace it in place.
+        var hold=Number(milliseconds)||0;
+        driver.vmSubtitleTimer=setTimeout(function(){driver.vmSubtitleCue='';driver.vmSubtitleImage=null;hideCaption(driver);},Math.max(1200,hold+400));
+    }
+    function restoreText(driver,index) {
+        if(!driver)return;
+        // State-only restore for a new programme source after an ad break.
+        // Native callback mode is configured by begin() before prepareAsync.
+        driver.vmTextTrack=index;driver.vmSubtitleTrackId=index;driver.vmTextVisible=index!==null;
+        driver.vmTextWanted=index!==null;
+        if(index!==null)preference(true);
+        if(window.vmSubtitles)window.vmSubtitles.select(driver,index);
+        paintCaption(driver);
     }
     function selectText(driver,index) {
         if(!driver)throw Error('No active player');
@@ -87,12 +161,22 @@
             if(driver._mimeType!=='application/dash+xml')api().setSelectTrack('TEXT',index);
         }
         api().setSilentSubtitle(true);
-        driver.vmTextTrack=index;driver.vmTextVisible=index!==null;
-        if(driver.vmSubtitleElement)driver.vmSubtitleElement.textContent=driver.vmTextVisible?(driver.vmSubtitleCue||''):'';
+        restoreText(driver,index);
+        preference(index!==null);
     }
     function tracks(driver, text) {
+        if(text&&driver._mimeType==='application/dash+xml'&&window.vmSubtitles){
+            var manifest=window.vmSubtitles.tracks(driver);
+            if(manifest.length)return manifest;
+            if(driver.vmTextAvailable)return [{id:0,language:'',label:'On',active:!!driver.vmTextVisible,audioRoles:[],roles:[],type:'text'}];
+            // A real DASH text candidate is only a reason to probe it, not proof
+            // that the programme has captions. Selection loads caption segments.
+            var candidates=window.vmSubtitles.candidates?window.vmSubtitles.candidates(driver):[];
+            if(candidates.length)return [{id:0,language:candidates[0].language,label:candidates[0].label||candidates[0].language||'Subtitles',active:!!driver.vmTextVisible,audioRoles:[],roles:[],type:'text'}];
+            return [];
+        }
         if(text&&!driver.vmTextAvailable)return [];
-        if(text&&driver._mimeType==='application/dash+xml')return [{id:0,language:'',label:'On',active:!!driver.vmTextVisible}];
+        if(text&&driver._mimeType==='application/dash+xml')return [{id:0,language:'',label:'On',active:!!driver.vmTextVisible,audioRoles:[],roles:[],type:'text'}];
         var items=[];
         try { items=api().getTotalTrackInfo(); } catch(ignore) {}
         var result=[];
@@ -102,9 +186,35 @@
             var language=extra.track_lang || extra.language || 'en';
             result.push({id:item.index,language:language,label:language,
                 active:(!text || driver.vmTextVisible) && driver[text?'vmTextTrack':'vmAudioTrack']===item.index,
-                audioRoles:[],roles:[],type:text?'text':'variant',audioCodec:'mp4a.40.2'});
+                audioRoles:[],roles:[],type:text?'text':'variant',audioCodec:'mp4a.40.2',extraInfo:item.extra_info||'{}'});
         });
         if(text&&driver.vmTextAvailable&&!result.length)result.push({id:0,language:'en',label:'English',active:!!driver.vmTextVisible});
+        if(!text){
+            var manifest=window.vmSubtitles&&window.vmSubtitles.audioTracks?window.vmSubtitles.audioTracks(driver):[],used={};
+            if(manifest.length){
+                var nextId=result.length?Math.min.apply(null,result.map(function(item){return item.id;})):0;
+                result.forEach(function(item,index){
+                    var extra={};try{extra=JSON.parse(item.extraInfo||'{}');}catch(ignore){}
+                    var external=String(extra.adaptation_id||extra.adaptationId||extra.track_id||extra.id||'');
+                    var match=null,i;
+                    for(i=0;i<manifest.length;i++)if(external&&String(manifest[i].adaptationId)===external){match=manifest[i];break;}
+                    if(!match&&manifest[index]&&!used[manifest[index].id])match=manifest[index];
+                    if(!match)for(i=0;i<manifest.length;i++)if(!used[manifest[i].id]&&manifest[i].language===item.language){match=manifest[i];break;}
+                    if(match&&!used[match.id]){
+                        used[match.id]=true;item.label=match.label;item.language=match.language;
+                        item.adaptationId=match.adaptationId;item.roles=match.roles||[];
+                    }
+                });
+                manifest.forEach(function(track){
+                    if(used[track.id])return;
+                    used[track.id]=true;
+                    while(result.some(function(item){return item.id===nextId;}))nextId++;
+                    var id=nextId++;
+                    result.push({id:id,language:track.language,label:track.label,active:driver.vmAudioTrack===id,
+                        audioRoles:[],roles:track.roles||[],type:'variant',audioCodec:'mp4a.40.2',adaptationId:track.adaptationId});
+                });
+            }
+        }
         if (!text && !result.length) result.push({id:0,language:'en',label:'English',active:true,audioRoles:[],roles:[]});
         if (!text && !result.some(function(item){return item.active;})) result[0].active=true;
         return result;
@@ -133,14 +243,15 @@
     }
     function close(driver) {
         driver.vmNativeGeneration=(driver.vmNativeGeneration || 0)+1;
-        clearSubtitle(driver);driver.vmSubtitleCue='';
+        clearSubtitle(driver);driver.vmSubtitleCue='';driver.vmSubtitleImage=null;
+        if(window.vmSubtitles)window.vmSubtitles.clear(driver);
         clearTimeout(driver.vmPrepareDeadline);
         driver.vmSeekPending=null;
         if(activeDriver!==driver)return;
-        try {
-            var state=api().getState();
-            if(state==='PLAYING'||state==='PAUSED'||state==='READY')api().stop();
-        } catch(ignore) {}
+        // An abrupt app kill can leave Samsung's native playback active even
+        // when getState() reports IDLE/NONE in the new process. Stop before
+        // close unconditionally so no stale audio survives into the ad source.
+        try{api().stop();}catch(ignore){}
         try{api().close();}catch(ignore){}
     }
     function reset(driver) {
@@ -155,8 +266,43 @@
         driver._source=driver._type=driver._mimeType=driver._pendingSource=undefined;
         driver._clearSentinels();
     }
+    // After an abrupt kill, Samsung can keep the previous programme's native
+    // audio output alive in a new process. Opening and tearing down the first
+    // MP4 source once makes the native engine take over that output before the
+    // ad itself starts.
+    function takeOverNativeAudio(driver,source) {
+        if(driver._mimeType==='application/dash+xml'||driver.vmNativeAudioTakeoverDone||!api())return Promise.resolve();
+        var player=api(),settled=false,deadline;
+        return new Promise(function(resolve){
+            function finish(){
+                if(settled)return;
+                settled=true;clearTimeout(deadline);
+                try{player.stop();}catch(ignore){}
+                try{player.close();}catch(ignore){}
+                driver.vmNativeAudioTakeoverDone=true;
+                console.log('VM AVPlay native audio takeover complete');
+                resolve();
+            }
+            try{
+                console.log('VM AVPlay native audio takeover begin');
+                try{player.stop();}catch(ignore){}
+                try{player.close();}catch(ignore){}
+                player.open(source);
+                player.setListener({});
+                player.prepareAsync(function(){
+                    try{player.play();}catch(ignore){}
+                    setTimeout(finish,200);
+                },finish);
+                deadline=setTimeout(finish,10000);
+            }catch(error){
+                console.log('VM AVPlay native audio takeover failed '+error.name);
+                finish();
+            }
+        });
+    }
     function stage(driver,type,source,mime,root) {
-        activeDriver=driver;driver.vmOptionsRoot=root;driver.vmTextVisible=false;driver.vmTextAvailable=false;driver.vmSubtitleCue='';driver.vmVideoHeight=0;
+        activeDriver=driver;driver.vmOptionsRoot=root;driver.vmTextVisible=false;driver.vmTextAvailable=false;driver.vmSubtitleCue='';driver.vmSubtitleImage=null;driver.vmSubtitleRendered=null;driver.vmSubCueText=null;
+        driver.vmSubtitleTrackId=null;driver.vmTextWanted=preference();driver.vmSubtitles=null;driver.vmVideoHeight=0;
         driver.vmNative=true;driver.vmNativeRetired=false;driver.vmNativeErrorReported=false;driver.vmHealthyPlayback=0;driver.vmPreviousClock=null;driver._clearSentinels();
         driver._type=type;driver._source=source;driver._mimeType=mime;driver._readyToPlayFrom=false;
         wrapTracks(driver);
@@ -207,12 +353,20 @@
                 driver.vmLastNativeProgress=Date.now();
                 console.log('VM AVPlay progress time='+Math.round(time/1000)+' state='+player.getState()+' duration='+Math.round(duration(driver)));
             }
+            if(window.vmSubtitles&&driver._mimeType==='application/dash+xml'){
+                try{window.vmSubtitles.tick(driver,time/1000);}catch(ignore){}
+            }
         }
         // The preceding MP4 ad was owned by Shaka. Native playback starts only
         // after its detach and video release have completed.
         Promise.resolve(driver.vmDetach).then(function(){if(!valid())return;return sourceUrl(driver,source);}).then(function(playbackSource){
             if(!valid())return;
-            return window.vmQuality?window.vmQuality.resolve(driver,playbackSource).then(function(){return playbackSource;}):playbackSource;
+            var quality=window.vmQuality?window.vmQuality.resolve(driver,playbackSource):Promise.resolve();
+            var subtitles=window.vmSubtitles?window.vmSubtitles.begin(driver,playbackSource):Promise.resolve();
+            return Promise.all([quality,subtitles]).then(function(){return playbackSource;});
+        }).then(function(playbackSource){
+            if(!valid())return;
+            return takeOverNativeAudio(driver,playbackSource).then(function(){return playbackSource;});
         }).then(function(playbackSource){
             if(!valid())return;
             try {
@@ -225,9 +379,9 @@
                 player.setListener({
                     onbufferingstart:function(){if(!valid())return;driver.vmBufferStart=Date.now();driver.vmBufferBucket=-1;reportState('buffering-start',driver);driver._toBuffering();},
                     onbufferingprogress:function(percent){if(!valid())return;var bucket=Math.floor(Number(percent)/25);if(bucket!==driver.vmBufferBucket){driver.vmBufferBucket=bucket;console.log('VM AVPlay buffering percent='+percent);}},
-                    onbufferingcomplete:function(){if(!valid())return;console.log('VM AVPlay buffering elapsedMs='+(driver.vmBufferStart?Date.now()-driver.vmBufferStart:0));driver.vmBufferStart=null;reportState('buffering-complete',driver);if(player.getState()==='PLAYING')driver._toPlaying();},
+                    onbufferingcomplete:function(){if(!valid())return;console.log('VM AVPlay buffering elapsedMs='+(driver.vmBufferStart?Date.now()-driver.vmBufferStart:0));driver.vmBufferStart=null;reportState('buffering-complete',driver);var nativeState=player.getState();if(nativeState==='PLAYING')driver._toPlaying();else if(nativeState==='PAUSED'&&driver.getState&&driver.getState()==='BUFFERING')driver._toPaused();},
                     oncurrentplaytime:status,
-                    onsubtitlechange:function(ms,text,type){if(valid())subtitle(driver,ms,text,type);},
+                    onsubtitlechange:function(ms,text,type,attributes){if(valid())subtitle(driver,ms,text,type);},
                     onstreamcompleted:function(){
                         if(!valid() || completeScheduled)return;
                         completeScheduled=true;notify('onstreamcompleted');
@@ -286,7 +440,9 @@
         active:function(){return activeDriver&&activeDriver.vmNative?activeDriver:null;},
         audioTracks:function(){return activeDriver?tracks(activeDriver,false):[];},
         textTracks:function(){return activeDriver?tracks(activeDriver,true):[];},
+        cue:function(driver,ms,text){if(driver&&driver.vmNative)subtitle(driver,ms,text,'0');},
         selectAudio:function(index){api().setSelectTrack('AUDIO',index);activeDriver.vmAudioTrack=index;},
+        restoreText:function(driver,index){restoreText(driver,index);},
         selectText:function(index){selectText(activeDriver,index);}
     };
 }());

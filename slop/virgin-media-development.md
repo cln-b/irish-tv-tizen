@@ -235,3 +235,10 @@ Possible next native-preserving investigation: in the captured Four two-period M
 The user requested packaging both apps into a shared repository before subscription expiry. The local Git-ready RTÉ folder was renamed irish-tv-legacy; existing RTÉ public files/identity were preserved under apps/rte-player, and native Virgin Media 0.2.36 is under apps/virgin-media-play. Both portable maintenance builds/tests and public release validation passed. Native live remains unreliable.
 
 The selected-manifest PlayReady diagnostic build 0.2.37 was tried separately. At 23:48:32 the app became hidden during its first MP4 advert. The encrypted live stage was not reached; no selected native init/challenge comparison was captured. Result INCONCLUSIVE, not a DRM fix. The clean 0.2.36 native WGT is being restored. Research code is preserved separately and not included in runtime dependencies.
+
+
+## Subtitle root-cause fix confirmed — build 1.0.2, 20 November 2026
+
+The user supplied the real `The 1% Club S3E7` MPD plus init/media `stpp` segment. It proved two missing pieces: the caption adaptation is `application/mp4` with `codecs="stpp"` (not a `text/*` MIME type), and TTML `begin`/`end` values are absolute media times that must be corrected by the segment template's `presentationTimeOffset`. Offline parsing of that exact attachment now finds the track, requests segment 30 and renders “Why are you so confident? I do well when I’m at home.”
+
+The first TV candidate (1.0.1) still showed “No subtitles detected”. Code inspection found the bootstrap defect: the panel required a verified cue before it would offer any control, but verification only starts once subtitles are requested. Build 1.0.2 adds a **Check subtitles** control when a parsed DASH text candidate exists, without claiming that captions exist. The user then enabled it in the installed 1.0.2 app on *The 1% Club S3E7*, saw captions, and reopening the panel showed **✓ English**. This is hardware confirmation for VOD subtitles; live remains experimental and no web-browser diagnostics were added.

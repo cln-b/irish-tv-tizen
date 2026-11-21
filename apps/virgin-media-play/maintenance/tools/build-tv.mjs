@@ -4,11 +4,32 @@ import {avplayHooks} from './avplay-hooks.mjs';
 import {parse} from 'acorn';
 const root=path.resolve(import.meta.dirname,'..');
 const version=fs.readFileSync(path.join(root,'../VERSION'),'utf8').trim();
+const manifestVersion=version.split('.').length===2?version+'.0':version;
 const source=path.join(root,'upstream/hbbtv'), dest=path.join(root,'build/tv');
 fs.mkdirSync(dest,{recursive:true});
 const timingConfig=null;
 const diagnosticsEnabled=false;
 const fixedLive720Enabled=false;
+function style(text,name=''){
+ if(name.endsWith('/static/style/base.css')){
+  text+='\n/* VM Tizen search keyboard and horizontal menu alignment */\n';
+  text+='.keyboardButton:not(.keySPACE):not(.keySEARCH) {padding: 14px 0px; height: 1.1em; font-size: 26px}\n';
+  text+='.keyDEL {font-size: 16px !important}\n';
+  text+='.keySPACE {width: 346px !important}\n';
+  text+='.keySEARCH {padding: 17px 7px; margin-left: -14px; font-size: 20px !important}\n';
+  text+='/* Dynamic keyboard CSS is injected later with equal specificity. */\n';
+  text+='.keySEARCH.keySEARCH {padding: 17px 7px}\n';
+  text+='#horizontalMainMenuCullingCarousel > .widget.container.button {vertical-align: bottom}\n';
+  text+='/* Search and More icon optical alignment */\n';
+  text+='#search > svg {margin-top: -2px;}\n';
+  text+='#more > svg {margin-top: -1px;}\n';
+  text+='/* Home page tile footer and poster spacing */\n';
+  text+='.tilefooter {overflow: visible !important; z-index: auto !important}\n';
+  text+='.CULLINGposter .tilefooter {overflow: hidden !important; z-index: -1 !important}\n';
+  text+='.CULLINGposter {margin: 14px 0px 9px !important}\n';
+ }
+ return text;
+}
 function script(text,name=''){
  if(name.endsWith('/services/streams.js') && name.includes('/1.172.0/')){
   const field='device_type:"smarttv"';
@@ -58,6 +79,9 @@ function script(text,name=''){
  if(name.endsWith('/widgets/playerfooter.js') && name.includes('/1.172.0/')){
   if(text.split('["background-size","66.82px"]').length!==3)throw Error('Language icon sizing changed');
   text=text.replaceAll('["background-size","66.82px"]','["background-size","40px"]');
+  const language='onLanguageSelect:function(){var t;null===(t=this.playerComponent)||void 0===t||t.showLanguagePicker()}';
+  if(text.split(language).length!==2)throw Error('Language control changed');
+  text=text.replace(language,'onLanguageSelect:function(){var t;null===(t=this.playerComponent)||void 0===t||t.showUI(),this.hidden||null===(t=this.playerComponent)||void 0===t||t.showLanguagePicker()}');
  }
  if(name.endsWith('/widgets/svgimage.js') && name.includes('/1.172.0/')){
   const marker='["title","desc"].forEach';
@@ -81,6 +105,9 @@ function script(text,name=''){
   text=text.replace(marker,'this.MAX_RECOVERY_ATTEMPTS=window.vmAvPlay&&window.webapis&&window.webapis.avplay?0:3');
  }
  if(name.endsWith('/components/player/base.js') && name.includes('/1.172.0/')){
+  const adStart='beginADsAndStreamPlayback:function(e,t){this.adTypeParser=new f(e);';
+  if(text.split(adStart).length!==2)throw Error('Ad handoff changed');
+  text=text.replace(adStart,'beginADsAndStreamPlayback:function(e,t){if(!this.isLive()){console.log("VM VOD client ad insertion disabled");this.adTypeParser=new f({});return void this.beginPlayback(this.url,!0)}this.adTypeParser=new f(e);');
   const capture='capturePlayhead:function(){var e=o.getDuration(),t=this.getCurrentTime(),i=w.getDataItem(),s=this.utils.getUvid(i);this.loggedIn()&&p.setViewingProgress(s,t),this.adActive||t>30&&t<.95*e&&(i.airdate||(i.airdate=Date.now()),this.viewTracker.capture({uvid:i.id,airdate:i.airdate,playhead:t}))}';
   if(text.split(capture).length!==2)throw Error('Progress capture changed');
   text=text.replace(capture,'capturePlayhead:function(){if(this.isLive()||this.getAdPlaying())return;var duration=o.getDuration(),time=this.getCurrentTime(),data=w.getDataItem(),id=this.utils.getUvid(data);if(!isFinite(time)||time<=0)return;if(this.loggedIn())p.setViewingProgress(id,time);if(time>30&&time<.95*duration){if(!data.airdate)data.airdate=Date.now();this.viewTracker.capture({uvid:id,airdate:data.airdate,playhead:time});console.log("VM resume stored position="+time);}}');
@@ -135,7 +162,7 @@ for(const name of fs.readdirSync(source,{recursive:true})){
  if(name.endsWith('.js'))bytes=script(bytes.toString(),name);
  if(name.endsWith('.css')){
   const prefix=path.posix.relative(path.posix.dirname(name),'.')||'.';
-  bytes=bytes.toString().replace(/url\((["']?)\/\//g,'url($1https://').replace(/(?:https?:)?\/\/127\.0\.0\.1:18782\//g,prefix+'/');
+  bytes=style(bytes.toString(),name).replace(/url\((["']?)\/\//g,'url($1https://').replace(/(?:https?:)?\/\/127\.0\.0\.1:18782\//g,prefix+'/');
  }
  if(name.endsWith('.html')){
   const dir=path.posix.dirname(name), relative=path.posix.relative(dir,'.')||'.';
@@ -144,7 +171,7 @@ for(const name of fs.readdirSync(source,{recursive:true})){
   html=html.replace(/((?:src|href)=["'])(?:(?:https?:)?\/\/127\.0\.0\.1:18782\/|\/)([^"']+)/g,(_m,prefix,asset)=>prefix+relative+'/'+asset);
   html=html.replace(/((?:src|href)=["'])\/\//g,'$1https://');
   html=html.replace('<head>','<head><script>var vmPath=location.href,vmPos=vmPath.lastIndexOf("/whitelabel/app/");if(vmPos<0)vmPos=vmPath.lastIndexOf("/apps/bitmovin/");window.vmRoot=vmPath.slice(0,vmPos)+"/";window.vmTimingProxy='+JSON.stringify(timingConfig)+';window.vmDiagnosticsEnabled='+JSON.stringify(diagnosticsEnabled)+';window.vmFixedLive720Enabled='+JSON.stringify(fixedLive720Enabled)+';</script>');
-  html=html.replace('</script>','</script><script src="$WEBAPIS/webapis/webapis.js"></script><script src="'+relative+'/live-timing.js"></script><script src="'+relative+'/quality.js"></script><script src="'+relative+'/avplay.js"></script><script src="'+relative+'/options.js"></script><script src="'+relative+'/remote.js"></script>');
+  html=html.replace('</script>','</script><script src="$WEBAPIS/webapis/webapis.js"></script><script src="'+relative+'/live-timing.js"></script><script src="'+relative+'/quality.js"></script><script src="'+relative+'/avplay.js"></script><script src="'+relative+'/subtitles.js"></script><script src="'+relative+'/options.js"></script><script src="'+relative+'/remote.js"></script>');
   bytes=html;
  }
  const output=path.join(dest,name);fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,bytes);
@@ -154,6 +181,7 @@ fs.copyFileSync(path.join(root,'upstream/vendor/shaka-legacy.js'),path.join(dest
 fs.rmSync(path.join(dest,'shaka-4.12.7.js'),{force:true});
 fs.copyFileSync(path.join(root,'tv/remote.js'),path.join(dest,'remote.js'));
 fs.copyFileSync(path.join(root,'tv/avplay.js'),path.join(dest,'avplay.js'));
+fs.copyFileSync(path.join(root,'tv/subtitles.js'),path.join(dest,'subtitles.js'));
 fs.copyFileSync(path.join(root,'tv/quality.js'),path.join(dest,'quality.js'));
 fs.copyFileSync(path.join(root,'tv/options.js'),path.join(dest,'options.js'));
 fs.rmSync(path.join(dest,'boundary-sync.js'),{force:true});
@@ -161,7 +189,7 @@ fs.copyFileSync(path.join(root,'tv/live-timing.js'),path.join(dest,'live-timing.
 fs.copyFileSync(path.join(root,'widget/icon.png'),path.join(dest,'icon.png'));
 fs.writeFileSync(path.join(dest,'index.html'),'<!doctype html><html><head><meta charset="utf-8"><script>location.replace("./whitelabel/app/release/1.172.0/default-webkit-default.html?env=prd&cid=vmtv&platform=sam&platformenv=prd&httpforced=1");</script></head><body style="background:black"></body></html>');
 fs.writeFileSync(path.join(dest,'config.xml'),`<?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://example.invalid/virgin-media-play" version="${version}" viewmodes="maximized">
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://example.invalid/virgin-media-play" version="${manifestVersion}" viewmodes="maximized">
 <name>Virgin Media Play</name><icon src="icon.png"/><content src="index.html"/>
 <tizen:application id="VmPlay2016.Player" package="VmPlay2016" required_version="2.4"/>
 <tizen:profile name="tv-samsung"/><access origin="*" subdomains="true"/>

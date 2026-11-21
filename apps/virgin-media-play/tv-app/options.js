@@ -13,7 +13,7 @@
  }
  function label(track,fallback){
   var language=String(track.language||'').toLowerCase(),names={en:'English',eng:'English',ga:'Irish',gle:'Irish',cy:'Welsh',cym:'Welsh'};
-  return names[language]||track.label||track.language||fallback;
+  return track.label||names[language]||track.language||fallback;
  }
  function draw(){
   if(!panel)return;clear(panel);

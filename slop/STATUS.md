@@ -28,7 +28,7 @@ Release 1.2 (manifest 1.2.0) uses frontend 0.170.54075_2 and the existing Worker
 * Definite bug fixed: live.js overrode the base zero-retry policy with three fresh acquisitions. Those acquisitions could select fresh pre-roll pods after a native error. The actual built live subclass is now regression-tested with native fresh retries disabled.
 * Definite lifecycle bugs fixed: cancelled asynchronous startup could overwrite another source's quality state; a failed stop prevented close; a retired driver could close its replacement.
 * Still broken: live multi-period/ad transitions can freeze and raise PLAYER_ERROR_NOT_SUPPORTED_FILE. “Playing” state and advancing clocks do not establish correct decoded frames. Automatic same-source reopens produced repeats and have been removed. A ~50s gap to Chrome was reported; its pre-recovery baseline was unknown.
-* Still broken: News at 7 subtitles. Empty/image/no callback are insufficiently distinguished; do not infer content availability from the menu label.
+* Subtitle detection/rendering reworked and confirmed on hardware: the combined panel is retained; an advertised DASH text slot must yield a real cue before a language is offered; text/image AVPlay callbacks are logged and rendered; verified cues are drawn in the app layer and On/Off is remembered. On 20 November, the user enabled **Check subtitles** in test build 1.0.2 on *The 1% Club S3E7*, saw captions, and reopening the panel showed **✓ English**. “No subtitles detected” still means no verified cue yet, not proof that captions are absent.
 
 ## Useful next experiment
 
