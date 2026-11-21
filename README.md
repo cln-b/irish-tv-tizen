@@ -6,15 +6,13 @@ Patched Tizen 2.4 apps for **RTÉ Player**, **Virgin Media Play** and **TG4+**, 
    <img width="640" height="360" src="./screenshot.png" alt="App screenshots">
 </div>
 
-| App | On demand | Live | Sign-in | Subtitles | Notes | Setup |
+| App | VOD | Live | Sign&#8209;in | Subtitles | Notes | Setup |
 | --- | --- | --- | --- | --- | --- | --- |
-| RTÉ Player | ✅ | ✅ | ✅* | ✅ | Very slow to load, occasional restart required | [README](apps/rte-player/README.md) |
-| Virgin Media Play | ✅ | ❗ | ✅ | ✅ | Live channels skipping, struggles with ad transitions | [README](apps/virgin-media-play/README.md) |
-| TG4+ | ✅ | ❌ | ✅ | ❌ | Live DRM issues | [README](apps/tg4/README.md) |
+| <img src="/apps/rte-player/tv-app/rte-banner.png" alt="RTÉ Player" width="90"/> | ✅ | ✅ | ✅* | ✅ | Very slow to load, occasional restart required | [README](apps/rte-player/README.md) |
+| <img src="/apps/virgin-media-play/tv-app/icon.png" alt="Virgin Media Play" width="90"/> | ✅ | ❗ | ✅ | ✅ | Live channels skipping, struggles with ad transitions | [README](apps/virgin-media-play/README.md) |
+| <img src="/apps/tg4/tv-app/icon.png" alt="TG4+" width="90"/> | ✅ | ❌ | ✅ | ❌ | Live DRM issues | [README](apps/tg4/README.md) |
 
-Each app has its own `tv-app/config.xml`, icons, bundled frontend, and `maintenance` directory. RTÉ sign-in requires a small Cloudflare Worker.
-
-Download the **unsigned WGTs** from this repository's releases, then import and sign them in Tizen Studio using a Samsung distributor certificate containing your TV's DUID.
+Download the **unsigned WGTs** from [releases](https://github.com/cln-b/irish-tv-tizen/releases), then import and sign them in Tizen Studio using a Samsung distributor certificate containing your TV's DUID.
 
 ## Repository layout
 
@@ -43,4 +41,4 @@ docs/                    # current limitations and investigation handoff
 See [release packaging](RELEASING.md), [current playback status](slop/STATUS.md), and each app's maintenance README. This repository includes third-party broadcaster/player frontend code needed by the packaged apps; their original notices and ownership remain applicable. The patches do not bypass DRM, sign-in or regional restrictions.
 
 # AI disclaimer
-I do not claim to have personally achieved anything here. I was just trying to get the players working on my parents' old TV without hooking up a laptop via HDMI. Could someone more knowledgable than me do this better without AI? 100%
+I do not claim to have personally achieved anything here. Could someone more knowledgable than me do this faster and better without using AI? 100%. I just wanted to get the players working on my parents' old TV, without needing to hook up a laptop via HDMI.
