@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const css=fs.readFileSync(new URL('../build/tv/whitelabel/app/release/1.172.0/static/style/base.css',import.meta.url),'utf8');
 const rules=[
  '.keyboardButton:not(.keySPACE):not(.keySEARCH) {padding: 14px 0px; height: 1.1em; font-size: 26px}',
- '.keyDEL {font-size: 16px !important}',
+ '.keyDEL svg {margin-bottom: 2px}',
  '.keySPACE {width: 346px !important}',
  '.keySEARCH {padding: 17px 7px; margin-left: -14px; font-size: 20px !important}',
  '#search > svg {margin-top: -2px;}',

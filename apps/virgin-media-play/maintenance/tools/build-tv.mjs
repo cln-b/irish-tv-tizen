@@ -14,7 +14,7 @@ function style(text,name=''){
  if(name.endsWith('/static/style/base.css')){
   text+='\n/* VM Tizen search keyboard and horizontal menu alignment */\n';
   text+='.keyboardButton:not(.keySPACE):not(.keySEARCH) {padding: 14px 0px; height: 1.1em; font-size: 26px}\n';
-  text+='.keyDEL {font-size: 16px !important}\n';
+  text+='.keyDEL svg {margin-bottom: 2px}\n';
   text+='.keySPACE {width: 346px !important}\n';
   text+='.keySEARCH {padding: 17px 7px; margin-left: -14px; font-size: 20px !important}\n';
   text+='/* Dynamic keyboard CSS is injected later with equal specificity. */\n';

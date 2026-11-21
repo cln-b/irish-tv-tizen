@@ -989,7 +989,7 @@ video,
 
 /* VM Tizen search keyboard and horizontal menu alignment */
 .keyboardButton:not(.keySPACE):not(.keySEARCH) {padding: 14px 0px; height: 1.1em; font-size: 26px}
-.keyDEL {font-size: 16px !important}
+.keyDEL svg {margin-bottom: 2px}
 .keySPACE {width: 346px !important}
 .keySEARCH {padding: 17px 7px; margin-left: -14px; font-size: 20px !important}
 /* Dynamic keyboard CSS is injected later with equal specificity. */
