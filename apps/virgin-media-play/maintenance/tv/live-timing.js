@@ -7,6 +7,8 @@
     var day = 86400;
     var uint32 = 4294967296;
     var anchor = null;
+    var sharedShift = 0;
+    var baseline = null;
 
     function active() { return legacy; }
 
@@ -61,8 +63,29 @@
     function manifest(mpd) {
         if (!active()) return;
         mpd=xml(mpd);
+        // A static VOD MPD can declare a very large minBufferTime. Shaka folds
+        // that value into its segment scheduling target even when TAL supplies
+        // a smaller streaming.bufferingGoal, so cap it for the VOD MSE route.
+        // Segment addresses are unchanged; live feeds keep their own manifest
+        // values and timeline handling below.
+        if (mpd.getAttribute('type') !== 'dynamic') {
+            var minText = mpd.getAttribute('minBufferTime');
+            var minSeconds = periodStart(minText);
+            if (isFinite(minSeconds) && minSeconds > 10) {
+                mpd.setAttribute('minBufferTime', 'PT10.000S');
+                console.log('VM manifest minBufferTime ' + minText + ' -> PT10.000S');
+            }
+        }
         var origin = Date.parse(mpd.getAttribute('availabilityStartTime'));
         if (mpd.getAttribute('type') !== 'dynamic' || !isFinite(origin)) return;
+        // This feed grows its rolling DVR window during playback (seen up to
+        // 59s), which pushes Shaka's live start point steadily further back.
+        // Capping it moves the normal startup point forward without seeking.
+        var depthText = mpd.getAttribute('timeShiftBufferDepth');
+        var depth = periodStart(depthText);
+        if (isFinite(depth) && depth > 49) {
+            mpd.setAttribute('timeShiftBufferDepth', 'PT49.000S');
+        }
         var periods = mpd.getElementsByTagName('Period');
         if (!periods.length) return;
         var starts = [], timeline = null;
@@ -74,15 +97,22 @@
         }
         var first = timeline ? timeline.first : Math.min.apply(null, starts);
         if (anchor === null) {anchor = (Math.floor(first / day) - 1) * day;console.log('VM DASH timeline normalized');}
+        // Set one shared fragment-clock boundary here. Deriving it later from
+        // each SourceBuffer's timestampOffset lets small per-track differences
+        // select different days, which desynchronises audio from video.
+        sharedShift = Math.floor(anchor / day) * day;
         if (first < anchor) return;
         mpd.setAttribute('availabilityStartTime', new Date(origin + anchor * 1000).toISOString());
+        var out = [];
         if (timeline) {
             timeline.tracks.forEach(function (track) {
                 track.template.setAttribute('presentationTimeOffset', String(track.pto + anchor * track.scale));
+                out.push(track.template.getAttribute('presentationTimeOffset'));
             });
         } else {
             for (i = 0; i < periods.length; i++) {
                 periods[i].setAttribute('start', 'PT' + (starts[i] - anchor).toFixed(6) + 'S');
+                out.push(periods[i].getAttribute('start'));
             }
         }
     }
@@ -90,10 +120,11 @@
     function offset(buffer, seconds) {
         if (active() && anchor !== null) {
             buffer.rteOffset = seconds;
-            buffer.timestampOffset = seconds + (buffer.rteShift || 0);
+            if (typeof buffer.vmFixedOffset !== 'number') buffer.timestampOffset = seconds + (buffer.rteShift || 0);
         } else {
             delete buffer.rteOffset;
             delete buffer.rteShift;
+            delete buffer.vmFixedOffset;
             buffer.timestampOffset = seconds;
         }
     }
@@ -112,6 +143,9 @@
                 if (kind === 'mdhd') {
                     var field = p + (bytes[p+8] === 1 ? 28 : 20);
                     if (field + 4 <= p + size) buffer.rteScale = view.getUint32(field);
+                } else if (kind === 'hdlr' && size >= 20) {
+                    var handler = String.fromCharCode(bytes[p+16], bytes[p+17], bytes[p+18], bytes[p+19]);
+                    if (handler === 'soun' || handler === 'vide') buffer.vmKind = handler;
                 } else if (kind === 'tfdt' && size >= 20 && bytes[p+8] === 1) {
                     positions.push(p + 12);
                 } else if (kind === 'moov' || kind === 'trak' || kind === 'mdia' || kind === 'moof' || kind === 'traf') {
@@ -134,10 +168,27 @@
         var positions = fragmentTimes(bytes, view, buffer);
         var scale = buffer.rteScale;
         if (positions.length && scale) {
-            var candidate = Math.floor(-buffer.rteOffset / day) * day;
-            var ticks = candidate * scale;
-            var shift = 0;
+            // Rewrite every track to the same manifest-derived boundary and
+            // pin all tracks to one presentation baseline. Shaka can assign
+            // audio and video offsets a whole day apart even when the segment
+            // times are aligned, so its per-track offset cannot be trusted.
+            var candidate = sharedShift;
             var times = positions.map(function (p) { return view.getUint32(p) * uint32 + view.getUint32(p + 4); });
+            var first = times[0] / scale;
+            var shift = 0;
+            var initial = typeof buffer.vmFixedOffset !== 'number';
+            if (!initial) {
+                if (first > buffer.vmFirst + 0.5) {
+                    var gap = first - buffer.vmFirst;
+                    if (gap < 30) buffer.vmSegmentDuration = gap;
+                }
+                // A track switch must not retune the clock. Rewriting tfdt
+                // makes this TV seek back to the segment's original time,
+                // which disturbs video. New audio is appended on its natural
+                // timeline and replaces the old track as the buffer drains.
+                buffer.vmFirst = first;
+            }
+            var ticks = (candidate - (buffer.vmTimeShift || 0)) * scale;
             if (candidate > day * 365 && times.every(function (t) { return t >= ticks && t - ticks < scale * day * 30; })) {
                 shift = candidate;
                 var copy = new Uint8Array(bytes.length);
@@ -149,15 +200,25 @@
                     output.setUint32(p + 4, relative % uint32);
                 });
                 data = copy;
+                if (initial) {
+                    if (baseline === null) baseline = first - candidate;
+                    buffer.vmFixedOffset = baseline - first + candidate;
+                    buffer.vmTimeShift = 0;
+                    buffer.vmFirst = first;
+                    buffer.timestampOffset = buffer.vmFixedOffset;
+                }
             }
-            if (buffer.rteShift !== shift) {
-                buffer.rteShift = shift;
-                buffer.timestampOffset = buffer.rteOffset + shift;
-            }
+            buffer.rteShift = shift;
         }
         buffer.appendBuffer(data);
     }
 
     window.vmTimeline = {legacyEme:legacy, active:active, manifest:manifest, offset:offset, append:append,
-        reset:function(){anchor=null;}};
+        reset:function(){anchor=null;sharedShift=0;baseline=null;
+            var videos=document.getElementsByTagName('video'),i,buffers;
+            for(i=0;i<videos.length;i++){
+                try{buffers=videos[i].webkitSourceBuffers||videos[i].sourceBuffers||[];}catch(ignore){continue;}
+                for(var j=0;j<buffers.length;j++) delete buffers[j].vmTimeShift;
+            }
+        }};
 }());

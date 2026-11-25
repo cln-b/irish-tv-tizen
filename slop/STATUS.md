@@ -1,4 +1,4 @@
-# Handoff — 13 November 2026
+# Handoff — updated 24 November 2026
 
 ## TG4+ — added 14 November 2026
 
@@ -21,14 +21,22 @@ Release 1.2 (manifest 1.2.0) uses frontend 0.170.54075_2 and the existing Worker
 
 ## Virgin Media
 
-* Default: standalone Samsung AVPlay, with direct programme/DRM requests.
+* Historical baseline: standalone Samsung AVPlay with direct programme/DRM requests. Current 1.2 default is MSE for DASH with AVPlay fallback (see the 24 November note below).
 * Confirmed: on-demand picture/sound (The 1% Club), local resume, manual native 252p/1080p quality switching.
 * UI: corrected programme icons and full-viewport native options.
 * Live Auto requests HIGHEST at startup; hardware verification of this latest policy remains pending. Fixed720p was tested and did not solve live freezes.
 * Definite bug fixed: live.js overrode the base zero-retry policy with three fresh acquisitions. Those acquisitions could select fresh pre-roll pods after a native error. The actual built live subclass is now regression-tested with native fresh retries disabled.
 * Definite lifecycle bugs fixed: cancelled asynchronous startup could overwrite another source's quality state; a failed stop prevented close; a retired driver could close its replacement.
 * Still broken: live multi-period/ad transitions can freeze and raise PLAYER_ERROR_NOT_SUPPORTED_FILE. “Playing” state and advancing clocks do not establish correct decoded frames. Automatic same-source reopens produced repeats and have been removed. A ~50s gap to Chrome was reported; its pre-recovery baseline was unknown.
-* Subtitle detection/rendering reworked and confirmed on hardware: the combined panel is retained; an advertised DASH text slot must yield a real cue before a language is offered; text/image AVPlay callbacks are logged and rendered; verified cues are drawn in the app layer and On/Off is remembered. On 20 November, the user enabled **Check subtitles** in test build 1.0.2 on *The 1% Club S3E7*, saw captions, and reopening the panel showed **✓ English**. “No subtitles detected” still means no verified cue yet, not proof that captions are absent.
+* Subtitle detection/rendering reworked and confirmed on hardware: the custom combined panel was retained on the AVPlay/native path at that time; an advertised DASH text slot must yield a real cue before a language is offered; text/image AVPlay callbacks are logged and rendered; verified cues are drawn in the app layer and On/Off is remembered. On 20 November, the user enabled **Check subtitles** in test build 1.0.2 on *The 1% Club S3E7*, saw captions, and reopening the panel showed **✓ English**. “No subtitles detected” still means no verified cue yet, not proof that captions are absent.
+
+### 24 November 2026 — version 1.2 source/prebuilt sync
+
+* One public build uses MSE by default for live and VOD DASH when MediaSource supports `video/mp4; codecs="avc1.42E01E, mp4a.40.2"`. MP4 ads and native audio takeover stay on AVPlay, with hidden `vm-live-mse=off` / `vm-vod-mse=off` local-storage fallbacks. PlayReady init data is manifest-first, with WebKit `needkey` bytes only as fallback.
+* Audio/subtitles keep the stock TAL picker for MSE including VOD MSE; the custom combined panel is limited to AVPlay/native/VOD. Names come from `track.label` or MPD `<Label>`; no hardcoded IDs, names or AD heuristics. Subtitles use the bottom 36px cue fix.
+* Resolution uses a 36px cog and maps `abr.restrictions.minHeight`/`maxHeight`; Return closes the panel. ABR regression checks covered `4200000` → 720p id `6`, `12000000` → 1080p id `5`, and `setBandwidth(0)` restoring measured bandwidth.
+* Episodic and seasonal detail pages have **Mark as watched** beside My List. It sends the real `heartBeatStart` with the episode uvid and full-duration `play_head`, and splices the local model only after success. Detail → Return without clicking preserves real titles; a confirmed removal → Return prunes the empty Continue Watching row before Home parsing, so Home does not go blank/spinner.
+* Live ad/period transitions remain experimental. Do not reintroduce proactive reload, same-URL reopen, boundary seek, single-Period flattening, client-side SSAI or 15-minute refresh.
 
 ## Useful next experiment
 

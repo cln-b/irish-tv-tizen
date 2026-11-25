@@ -8,6 +8,12 @@
         try{adapter[name](value);}catch(ignore){window.vmNativeAnalytics=null;console.log('VM analytics observer recovered');}
     }
     function api() { return window.webapis && window.webapis.avplay; }
+    function mseSupported() {
+        try {
+            return !!(window.MediaSource && typeof window.MediaSource.isTypeSupported === 'function' &&
+                window.MediaSource.isTypeSupported('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'));
+        } catch (ignore) { return false; }
+    }
     function sourceUrl(driver,source) {
         var config=window.vmTimingProxy,owner=driver.vmOwner;
         if(!config || driver._mimeType!=='application/dash+xml' || !owner || !owner.isLive || !owner.isLive())return Promise.resolve(source);
@@ -24,7 +30,27 @@
             xhr.send(JSON.stringify({url:source}));
         });
     }
-    function wants(mime) { return (mime === 'application/dash+xml' || mime === 'video/mp4') && !!api(); }
+    function wants(mime,type,driver) {
+        if(!((mime === 'application/dash+xml' || mime === 'video/mp4') && !!api()))return false;
+        // MSE is DASH-only. MP4 ads and the native audio takeover must stay
+        // on AVPlay regardless of the build mode or device capability.
+        if(mime === 'video/mp4')return true;
+        // The TAL source always passes type "video"; the live flag is captured
+        // on the driver by the media-player-coupling build hook.
+        var live = !!(driver && driver.vmIsLive) || type === 'live-video' || type === 'live-audio';
+        if(!mseSupported()) {
+            console.log('VM MSE gate: MediaSource unavailable, DASH stays on AVPlay');
+            return true;
+        }
+        if(live) {
+            console.log('VM MSE gate: routing live DASH to Shaka');
+            try { if(localStorage.getItem('vm-live-mse') === 'off') return true; } catch(ignore) {}
+            return false;
+        }
+        console.log('VM MSE gate: routing VOD DASH to Shaka');
+        try { if(localStorage.getItem('vm-vod-mse') === 'off') return true; } catch(ignore) {}
+        return false;
+    }
     function current(driver) { try { return api().getCurrentTime()/1000; } catch (ignore) { return 0; } }
     function duration(driver) { try { return api().getDuration()/1000; } catch (ignore) { return 0; } }
     function reportVideo(){
@@ -151,6 +177,47 @@
         if(window.vmSubtitles)window.vmSubtitles.select(driver,index);
         paintCaption(driver);
     }
+    function nativeAudioIndices() {
+        var result=[];
+        try { api().getTotalTrackInfo().forEach(function(item){if(item.type==='AUDIO')result.push(item.index);}); } catch(ignore){}
+        return result;
+    }
+    function selectAudioIndex(driver,index,force) {
+        if(!driver)throw Error('No active player');
+        if(!force&&driver.vmAudioGuardUntil&&Date.now()<driver.vmAudioGuardUntil&&typeof driver.vmAudioTrack==='number'&&index!==driver.vmAudioTrack){
+            console.log('VM automatic audio selection ignored id='+index+' keeping='+driver.vmAudioTrack);
+            return;
+        }
+        var selected=tracks(driver,false).filter(function(track){return track.id===index;})[0];
+        if(selected)driver.vmAudioIdentity={adaptationId:selected.adaptationId,label:selected.label,language:selected.language};
+        var native=nativeAudioIndices(),owner=driver.vmOwner;
+        var live=driver._mimeType==='application/dash+xml'&&owner&&owner.isLive&&owner.isLive();
+        // On live DASH the single native AUDIO stream is already playing; asking
+        // AVPlay to select it makes the native player seek and then fail with
+        // PLAYER_ERROR_NOT_SUPPORTED_FILE. Manifest labels, including the AD
+        // choice, are applied to the panel state only. VOD keeps native selection
+        // where the platform supports it, but a native failure must never leave
+        // the panel showing the previous choice.
+        if(native.indexOf(index)>=0&&!live){
+            try{api().setSelectTrack('AUDIO',index);}
+            catch(error){console.log('VM native audio selection unavailable '+error.name+'; keeping manifest selection');}
+        } else if(native.indexOf(index)>=0){
+            console.log('VM live audio selection kept in manifest id='+index+' nativeAudio='+native.join(','));
+        } else {
+            console.log('VM synthetic audio selection id='+index+' nativeAudio='+native.join(','));
+        }
+        driver.vmAudioTrack=index;
+        driver.vmAudioGuardUntil=0;
+    }
+    function restoreAudioIndex(driver) {
+        var identity=driver&&driver.vmAudioIdentity;
+        if(!identity)return;
+        var list=tracks(driver,false),match=null,i;
+        if(identity.adaptationId)for(i=0;i<list.length;i++)if(String(list[i].adaptationId||'')===String(identity.adaptationId)){match=list[i];break;}
+        if(!match&&identity.label)for(i=0;i<list.length;i++)if(list[i].label===identity.label){match=list[i];break;}
+        if(!match&&identity.language)for(i=0;i<list.length;i++)if(list[i].language===identity.language){match=list[i];break;}
+        if(match&&match.id!==driver.vmAudioTrack)selectAudioIndex(driver,match.id,true);
+    }
     function selectText(driver,index) {
         if(!driver)throw Error('No active player');
         if(index!==null){
@@ -179,6 +246,8 @@
         if(text&&driver._mimeType==='application/dash+xml')return [{id:0,language:'',label:'On',active:!!driver.vmTextVisible,audioRoles:[],roles:[],type:'text'}];
         var items=[];
         try { items=api().getTotalTrackInfo(); } catch(ignore) {}
+        var usedIndices={},nextId=0;
+        items.forEach(function(item){if(typeof item.index==='number'){usedIndices[item.index]=true;if(item.index>=nextId)nextId=item.index+1;}});
         var result=[];
         items.forEach(function(item) {
             if (text ? item.type!=='TEXT' : item.type!=='AUDIO') return;
@@ -192,7 +261,6 @@
         if(!text){
             var manifest=window.vmSubtitles&&window.vmSubtitles.audioTracks?window.vmSubtitles.audioTracks(driver):[],used={};
             if(manifest.length){
-                var nextId=result.length?Math.min.apply(null,result.map(function(item){return item.id;})):0;
                 result.forEach(function(item,index){
                     var extra={};try{extra=JSON.parse(item.extraInfo||'{}');}catch(ignore){}
                     var external=String(extra.adaptation_id||extra.adaptationId||extra.track_id||extra.id||'');
@@ -208,8 +276,9 @@
                 manifest.forEach(function(track){
                     if(used[track.id])return;
                     used[track.id]=true;
-                    while(result.some(function(item){return item.id===nextId;}))nextId++;
+                    while(usedIndices[nextId]||result.some(function(item){return item.id===nextId;}))nextId++;
                     var id=nextId++;
+                    usedIndices[id]=true;
                     result.push({id:id,language:track.language,label:track.label,active:driver.vmAudioTrack===id,
                         audioRoles:[],roles:track.roles||[],type:'variant',audioCodec:'mp4a.40.2',adaptationId:track.adaptationId});
                 });
@@ -228,12 +297,12 @@
         }
         wrap('getVariantTracks',function(){return tracks(driver,false);});
         wrap('getTextTracks',function(){return tracks(driver,true);});
-        wrap('selectVariantTrack',function(track){api().setSelectTrack('AUDIO',track.id);driver.vmAudioTrack=track.id;});
+        wrap('selectVariantTrack',function(track){selectAudioIndex(driver,track.id);});
         wrap('selectTextTrack',function(track){selectText(driver,track.id);});
-        wrap('selectAudioTrack',function(track){if(track){api().setSelectTrack('AUDIO',track.id);driver.vmAudioTrack=track.id;}});
+        wrap('selectAudioTrack',function(track){if(track)selectAudioIndex(driver,track.id);});
         wrap('selectAudioLanguage',function(language){
             var list=tracks(driver,false),track=list.filter(function(item){return item.language===language;})[0];
-            if(track){api().setSelectTrack('AUDIO',track.id);driver.vmAudioTrack=track.id;}
+            if(track)selectAudioIndex(driver,track.id);
         });
         wrap('selectTextLanguage',function(language){
             var track=tracks(driver,true).filter(function(item){return item.language===language;})[0];
@@ -246,7 +315,8 @@
         clearSubtitle(driver);driver.vmSubtitleCue='';driver.vmSubtitleImage=null;
         if(window.vmSubtitles)window.vmSubtitles.clear(driver);
         clearTimeout(driver.vmPrepareDeadline);
-        driver.vmSeekPending=null;
+        driver.vmSeekPending=null;driver.vmAudioGuardUntil=0;
+        driver.vmStallClock=null;driver.vmStallSince=0;driver.vmLiveRecoveryPending=false;
         if(activeDriver!==driver)return;
         // An abrupt app kill can leave Samsung's native playback active even
         // when getState() reports IDLE/NONE in the new process. Stop before
@@ -323,6 +393,8 @@
     }
     function begin(driver,from) {
         var player=api(),video=driver._mediaElement,source=driver._source;
+        var owner=driver.vmOwner,live=owner&&owner.isLive&&owner.isLive();
+        var audioIdentity=driver.vmAudioIdentity;
         driver._postBufferingState='PLAYING';driver._toBuffering();
         close(driver);
         var generation=driver.vmNativeGeneration,completeScheduled=false,errorScheduled=false;
@@ -347,6 +419,29 @@
             if(previous){var delta=(time-previous.time)/1000;if(delta>0&&delta<=(now-previous.at)/1000+1)driver.vmHealthyPlayback+=delta;else driver.vmHealthyPlayback=0;}
             driver.vmPreviousClock={time:time,at:now};
             if(driver.vmHealthyPlayback>=60&&driver.vmOwner)driver.vmOwner.vmNativeRecoveryCount=0;
+            // Samsung's old DASH engine can stop advancing across a live Period
+            // boundary while still reporting PLAYING. The caption renderer adopts
+            // the new Period and keeps emitting cues, so the visible symptom is
+            // replaying/frozen video with normal subtitles. Reopen the same live
+            // source once from the current edge after a sustained native stall;
+            // this is reactive recovery, not a proactive refresh timer.
+            if(live&&player.getState()==='PLAYING'&&time>0){
+                var stalled=driver.vmStallClock;
+                if(typeof stalled!=='number'||time>stalled+500){
+                    driver.vmStallClock=time;driver.vmStallSince=now;
+                } else if(!driver.vmLiveRecoveryPending&&now-(driver.vmStallSince||now)>=10000){
+                    var budget=owner.vmNativeRecoveryCount||0;
+                    if(budget<2){
+                        owner.vmNativeRecoveryCount=budget+1;
+                        driver.vmLiveRecoveryPending=true;
+                        console.log('VM AVPlay live stall recovery after='+Math.round((now-driver.vmStallSince)/1000)+'s time='+Math.round(time/1000));
+                        reportState('live-stall-restart',driver);
+                        setTimeout(function(){if(valid())begin(driver,0);},0);
+                    }
+                }
+            } else {
+                driver.vmStallClock=null;driver.vmStallSince=0;
+            }
             if(previous&&time>previous.time&&driver.getState&&driver.getState()==='BUFFERING'&&player.getState()==='PLAYING')driver._toPlaying();
             notify("oncurrentplaytime",time);driver._onStatus();
             if(!driver.vmLastNativeProgress || Date.now()-driver.vmLastNativeProgress>12000){
@@ -423,10 +518,24 @@
                         player.play();driver._toPlaying();
                         console.log('VM AVPlay prepared and playing type='+driver._mimeType);reportState('prepared',driver);
                         reportVideo();
+                        // Shaka's old track handler reselects the first variant on
+                        // manifestloaded. Keep the user's audio choice across the
+                        // source restart, then map it onto the new native indices.
+                        if(audioIdentity)driver.vmAudioGuardUntil=Date.now()+1500;
                         window.dispatchEvent(new Event('manifestloaded'));
+                        if(audioIdentity){
+                            setTimeout(function(){if(valid())restoreAudioIndex(driver);},0);
+                            setTimeout(function(){driver.vmAudioGuardUntil=0;},1500);
+                        }
                     }
-                    if(typeof from==='number'&&from>0)requestSeek(driver,from,'beginPlaybackFrom',play,function(){fail('resume seek failed');});
-                    else play();
+                    // Live DASH rejects a seek back to the position captured
+                    // before the source restart. Reopening the same live source
+                    // already joins the current edge, so only VOD resumes by seek.
+                    if(typeof from==='number'&&from>0&&!live)requestSeek(driver,from,'beginPlaybackFrom',play,function(){fail('resume seek failed');});
+                    else {
+                        if(live&&typeof from==='number'&&from>0)console.log('VM AVPlay live restart resumes at current edge');
+                        play();
+                    }
                 },function(error){fail(error && error.name || 'prepare failed');});
             } catch(error) {fail(error.name || 'open failed');}
         }).catch(function(error){fail(error.message || 'source failed');});
@@ -435,13 +544,13 @@
     function pause(driver){try{api().pause();driver._toPaused();}catch(error){console.log('VM AVPlay pause '+error.name);}}
     function resume(driver){try{api().play();driver._toPlaying();}catch(error){console.log('VM AVPlay resume '+error.name);}}
     function seek(driver,seconds){requestSeek(driver,seconds,'playFrom');}
-    window.vmAvPlay={wants:wants,config:config,stage:stage,begin:begin,stop:stop,reset:reset,
+    window.vmAvPlay={wants:wants,mseSupported:mseSupported,config:config,stage:stage,begin:begin,stop:stop,reset:reset,
         pause:pause,resume:resume,seek:seek,current:current,duration:duration,
         active:function(){return activeDriver&&activeDriver.vmNative?activeDriver:null;},
         audioTracks:function(){return activeDriver?tracks(activeDriver,false):[];},
         textTracks:function(){return activeDriver?tracks(activeDriver,true):[];},
         cue:function(driver,ms,text){if(driver&&driver.vmNative)subtitle(driver,ms,text,'0');},
-        selectAudio:function(index){api().setSelectTrack('AUDIO',index);activeDriver.vmAudioTrack=index;},
+        selectAudio:function(index){selectAudioIndex(activeDriver,index,true);},
         restoreText:function(driver,index){restoreText(driver,index);},
         selectText:function(index){selectText(activeDriver,index);}
     };

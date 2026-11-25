@@ -48,13 +48,31 @@ function stppTtml(body) {
         : element('p', { begin: '00:00:58.073', end: '00:00:58.713' }, []);
     return element('tt', {}, [p]);
 }
-function contextFor(caption, stpp = false) {
+function liveMpd(advance = 0) {
+    const timeline = element('SegmentTimeline', {}, [element('S', {
+        t: String(5521642239576 + advance * 540000), d: '540000', r: '9'
+    })]);
+    const template = element('SegmentTemplate', {
+        timescale: '90000', startNumber: String(10914993 + advance), presentationTimeOffset: '5521607654376',
+        media: 'captions/$Number$.mp4'
+    }, [timeline]);
+    const rep = element('Representation', { id: '8', bandwidth: '2000' }, [template]);
+    const adaptation = element('AdaptationSet', { mimeType: 'application/mp4', codecs: 'stpp', lang: 'eng' }, [rep]);
+    return element('MPD', { type: 'dynamic' }, [element('Period', { start: 'PT61351196.159S' }, [adaptation])]);
+}
+function liveTtml(body, advance = 0) {
+    const begin = String(61351588.28 + advance * 6), end = String(61351588.98 + advance * 6);
+    const p = body ? element('p', { begin, end }, [text('Live caption')]) : element('p', { begin, end }, []);
+    return element('tt', {}, [p]);
+}
+function contextFor(caption, stpp = false, live = false) {
     const requests = [], cues = [], restored = [];
+    let liveAdvance = 0;
     class XMLHttpRequest {
         open(method, url) { this.url = url; requests.push(url); }
         send() {
             this.status = 200;
-            this.responseText = this.url.includes('captions/') ? (stpp ? '\u0000moof\u0000mdat<tt>stpp</tt>' : '<tt>caption</tt>')
+            this.responseText = this.url.includes('captions/') ? (live ? '\u0000moof\u0000mdat<tt>live</tt>' : stpp ? '\u0000moof\u0000mdat<tt>stpp</tt>' : '<tt>caption</tt>')
                 : this.url.includes('empty/') ? '<tt>empty</tt>' : '<mpd />';
             Promise.resolve().then(() => this.onload && this.onload());
         }
@@ -62,11 +80,12 @@ function contextFor(caption, stpp = false) {
     class DOMParser {
         parseFromString(value) {
             if (String(value).indexOf('<tt') >= 0) {
-                const root = stpp ? stppTtml(String(value).indexOf('stpp') >= 0) : ttml(String(value).indexOf('caption') >= 0);
+                const root = live ? liveTtml(String(value).indexOf('live') >= 0, liveAdvance)
+                    : stpp ? stppTtml(String(value).indexOf('stpp') >= 0) : ttml(String(value).indexOf('caption') >= 0);
                 const p = root.childNodes[0];
                 return { documentElement: root, getElementsByTagName: () => [p] };
             }
-            return { documentElement: stpp ? stppMpd() : mpd(caption), getElementsByTagName: () => [] };
+            return { documentElement: live ? liveMpd(liveAdvance) : stpp ? stppMpd() : mpd(caption), getElementsByTagName: () => [] };
         }
     }
     const resolverState = { base: '', path: '' };
@@ -98,7 +117,7 @@ function contextFor(caption, stpp = false) {
     };
     const window = {
         vmAvPlay: {
-            current: () => stpp ? 58.2 : 2,
+            current: () => live ? 1222046.32 + liveAdvance * 6 : stpp ? 58.2 : 2,
             cue(driver, ms, value) { cues.push({ ms, value }); },
             restoreText(driver, id) { restored.push(id); driver.vmSubtitleTrackId = id; driver.vmTextVisible = true; }
         },
@@ -107,7 +126,7 @@ function contextFor(caption, stpp = false) {
     vm.runInNewContext(fs.readFileSync(new URL('../tv/subtitles.js', import.meta.url), 'utf8'), {
         window, document, DOMParser, XMLHttpRequest, Promise, console, isFinite, Error, RegExp, Number, String, Math, Array, URL
     });
-    return { window, requests, cues, restored };
+    return { window, requests, cues, restored, advance: delta => { liveAdvance += delta; } };
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
@@ -165,4 +184,48 @@ stpp.window.vmSubtitles.select(stppDriver, stppTracks[0].id);
 stpp.window.vmSubtitles.tick(stppDriver, 58.2);
 assert(stpp.cues.some(cue => cue.value === 'Real caption'), 'Media-timed TTML cues must be rendered at the playback timestamp');
 
-console.log('PASS manifest-verified subtitles, stpp TTML-in-MP4 timing, cue rendering and empty-segment false-positive guard');
+const live = contextFor(true, true, true), liveDriver = {
+    _mimeType: 'application/dash+xml', vmTextWanted: true, vmTextVisible: true,
+    vmSubtitleTrackId: null, vmSubCueText: null
+};
+await live.window.vmSubtitles.begin(liveDriver, 'https://example.invalid/live.mpd');
+await flush();
+live.window.vmSubtitles.tick(liveDriver, 1222046.32);
+assert(live.requests.includes('https://example.invalid/captions/10914994.mp4'), 'Wrapped AVPlay live time must select the absolute MPD caption segment');
+await flush();
+const liveTracks = live.window.vmSubtitles.tracks(liveDriver);
+assert.equal(liveTracks.length, 1, 'Live stpp cues must verify the subtitle track');
+live.window.vmSubtitles.select(liveDriver, liveTracks[0].id);
+live.window.vmSubtitles.tick(liveDriver, 1222046.32);
+assert(live.cues.some(cue => cue.value === 'Live caption'), 'Live captions must render like VOD captions');
+
+// A live MPD slides its SegmentTimeline forward. Past the cached window the
+// subtitle renderer must refresh the manifest in place, not restart playback.
+const advancing = contextFor(true, true, true), advancingDriver = {
+    _mimeType: 'application/dash+xml', vmTextWanted: true, vmTextVisible: true,
+    vmSubtitleTrackId: null, vmSubCueText: null, vmOwner: { isLive: () => true }
+};
+await advancing.window.vmSubtitles.begin(advancingDriver, 'https://example.invalid/live.mpd');
+await flush();
+advancing.window.vmSubtitles.tick(advancingDriver, 1222046.32);
+await flush();
+const beforeAdvance = advancingDriver.vmSubtitles.tracks[0].streams[0].listing.entries[0].number;
+advancing.advance(10);
+advancing.window.vmSubtitles.tick(advancingDriver, 1222046.32 + 60);
+await flush();
+assert.equal(advancing.requests.filter(url => url === 'https://example.invalid/live.mpd').length, 2,
+    'A stale live caption window must trigger one manifest refresh');
+const afterAdvance = advancingDriver.vmSubtitles.tracks[0].streams[0].listing.entries[0].number;
+assert(afterAdvance > beforeAdvance, 'The refreshed live segment window must follow the playhead');
+advancing.window.vmSubtitles.select(advancingDriver, 0);
+advancing.window.vmSubtitles.tick(advancingDriver, 1222046.32 + 60);
+assert(advancing.cues.some(cue => cue.value === 'Live caption'), 'Refreshed live captions must continue rendering');
+advancing.advance(10);
+advancing.window.vmSubtitles.tick(advancingDriver, 1222046.32 + 120);
+await flush();
+assert.equal(advancing.requests.filter(url => url === 'https://example.invalid/live.mpd').length, 3,
+    'Each expired live caption window must refresh once');
+const twiceAdvanced = advancingDriver.vmSubtitles.tracks[0].streams[0].listing.entries[0].number;
+assert(twiceAdvanced > afterAdvance, 'Repeated live window expiry must keep following the playhead');
+
+console.log('PASS manifest-verified subtitles, stpp TTML-in-MP4 timing, wrapped live clock, sliding live window, cue rendering and empty-segment false-positive guard');

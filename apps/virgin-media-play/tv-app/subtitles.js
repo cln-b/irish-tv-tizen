@@ -2,6 +2,10 @@
 // cues when Samsung AVPlay does not deliver usable onsubtitlechange events.
 (function () {
     var cache = {};
+    // Samsung exposes getCurrentTime() as signed 32-bit milliseconds. Live DASH
+    // clocks are larger, so unwrap against the manifest's Period start before
+    // mapping the playback clock onto caption segments.
+    var wrapSeconds = 4294967.296;
     var resolver = document.implementation.createHTMLDocument('');
     var resolverBase = resolver.createElement('base');
     var resolverLink = resolver.createElement('a');
@@ -243,6 +247,67 @@
         if (!result.length) result.push({ start: segment.start, end: segment.start + segment.duration, text: clean(trimmed) });
         return result;
     }
+    function fetchManifest(source) {
+        return new Promise(function(resolve){
+            var xhr=new XMLHttpRequest();
+            xhr.open('GET',source,true);xhr.timeout=5000;
+            xhr.onload=function(){
+                if(xhr.status>=200&&xhr.status<300){
+                    try{resolve({tracks:parseManifest(xhr.responseText,source),audioTracks:parseAudio(xhr.responseText,source)});return;}catch(error){}
+                }
+                resolve(null);
+            };
+            xhr.onerror=xhr.ontimeout=function(){resolve(null);};
+            try{xhr.send();}catch(ignore){resolve(null);}
+        });
+    }
+    function adopt(state,parsed) {
+        if(!state||!parsed)return;
+        var oldTracks=state.tracks||[];
+        state.tracks=parsed.tracks.map(function(track,index){
+            var old=oldTracks.filter(function(item){return item.key===track.key;})[0]||oldTracks[index];
+            if(old){
+                track.verified=!!old.verified;
+                track.streams.forEach(function(stream){
+                    var previous=(old.streams||[]).filter(function(item){return item.media===stream.media;})[0];
+                    if(previous)stream.cache=previous.cache;
+                });
+            }
+            return track;
+        });
+        state.audioTracks=parsed.audioTracks||[];
+    }
+    function timelineEnd(state) {
+        var end=-Infinity,tracks=state&&state.tracks||[];
+        for(var i=0;i<tracks.length;i++){
+            for(var j=0;j<tracks[i].streams.length;j++){
+                var stream=tracks[i].streams[j],last;
+                if(stream.listing.entries){
+                    var entries=stream.listing.entries;
+                    last=entries[entries.length-1];
+                    end=Math.max(end,(last.time-stream.pto)/stream.scale+last.duration/stream.scale);
+                }else if(stream.listing.duration>0){
+                    end=Math.max(end,stream.listing.duration/stream.scale-stream.pto/stream.scale);
+                }
+            }
+        }
+        return end;
+    }
+    function refresh(driver) {
+        var state=driver&&driver.vmSubtitles,end=timelineEnd(state);
+        if(!state||!state.source||state.refreshPending||state.refreshedForEnd===end)return;
+        state.refreshPending=true;state.refreshedForEnd=end;
+        fetchManifest(state.source).then(function(parsed){
+            state.refreshPending=false;
+            if(!parsed)return;
+            adopt(state,parsed);
+            // Keep the guard on the expired window. A refreshed MPD exposes a
+            // new end, so a later expiry can trigger exactly one more refresh.
+            if(window.vmAvPlay&&window.vmAvPlay.current){
+                try{tick(driver,window.vmAvPlay.current(driver));}catch(ignore){}
+            }
+        });
+    }
     function markVerified(driver, track, stream) {
         if (track.verified) return;
         track.verified = true;
@@ -288,9 +353,24 @@
         try { xhr.send(); } catch (ignore) { entry.loaded = true; }
         return entry.cues;
     }
+    function unwrapTime(driver, time) {
+        var state = driver && driver.vmSubtitles, streams = state && state.tracks;
+        if (!streams || !streams.length || !isFinite(time)) return time;
+        var periodStart = 0, found = false;
+        for (var i = 0; i < streams.length && !found; i++) {
+            for (var j = 0; j < streams[i].streams.length; j++) {
+                periodStart = streams[i].streams[j].periodStart;
+                found = true;
+                break;
+            }
+        }
+        if (!found || periodStart <= time || periodStart - time > wrapSeconds * 100) return time;
+        return time + Math.ceil((periodStart - time) / wrapSeconds) * wrapSeconds;
+    }
     function tick(driver, time) {
         var state = driver && driver.vmSubtitles;
         if (!state || !isFinite(time)) return;
+        time = unwrapTime(driver, time);
         var track = null, i;
         for (i = 0; i < state.tracks.length; i++) if (state.tracks[i].id === driver.vmSubtitleTrackId) track = state.tracks[i];
         if (!track && driver.vmTextWanted && state.tracks.length) {
@@ -298,15 +378,22 @@
             driver.vmSubtitleTrackId = track.id;
         }
         if (!track) return;
-        var active = null, activeStream = null;
+        var active = null, activeStream = null, covered = false;
         for (i = 0; i < track.streams.length; i++) {
             var stream = track.streams[i], segment = segmentFor(stream, time);
             if (!segment) continue;
+            covered = true;
             var cues = load(driver, track, stream, segment), relative = time - stream.periodStart;
             for (var j = 0; j < cues.length; j++) {
                 if (relative >= cues[j].start && relative < cues[j].end) { active = cues[j]; activeStream = stream; break; }
             }
             if (active) break;
+        }
+        if (!covered) {
+            // Live MPDs slide their SegmentTimeline forward with the playhead.
+            // Refresh that window in place; never restart the native player.
+            var owner = driver.vmOwner;
+            if (owner && owner.isLive && owner.isLive() && time >= timelineEnd(state)) refresh(driver);
         }
         if (!driver.vmTextVisible) return;
         if (active && active.text !== driver.vmSubCueText) {
@@ -323,25 +410,11 @@
             if (!driver || driver._mimeType !== 'application/dash+xml') return Promise.resolve();
             var state = cache[source];
             if (!state) {
-                state = cache[source] = { pending: new Promise(function (resolve) {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET', source, true);
-                    xhr.timeout = 5000;
-                    function done() { resolve(); }
-                    xhr.onload = function () {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            try {
-                                state.tracks = parseManifest(xhr.responseText, source);
-                                state.audioTracks = parseAudio(xhr.responseText, source);
-                            } catch (error) {
-                                console.log('VM subtitle manifest ignored ' + error.name);
-                            }
-                        }
-                        done();
-                    };
-                    xhr.onerror = xhr.ontimeout = done;
-                    try { xhr.send(); } catch (ignore) { done(); }
-                }), tracks: [] };
+                state = cache[source] = { source: source, tracks: [], audioTracks: [] };
+                state.pending = fetchManifest(source).then(function(parsed){
+                    if (!parsed) console.log('VM subtitle manifest ignored');
+                    adopt(state, parsed);
+                });
             }
             driver.vmSubtitles = state;
             if (!driver.vmSubtitleTrackId && driver.vmTextWanted && state.tracks.length) driver.vmSubtitleTrackId = state.tracks[0].id;

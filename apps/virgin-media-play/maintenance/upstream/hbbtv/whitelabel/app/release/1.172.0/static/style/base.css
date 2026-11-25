@@ -619,6 +619,63 @@ video,
   line-height: normal;
 }
 
+/* VMTV Tizen: Shaka sets WebKit flex alignment inline but leaves the
+   container with display:block and no height, so cues render at the top.
+   Give it the full player area and a real flex bottom alignment. */
+.shaka-text-container {
+  display: -webkit-flex !important;
+  display: flex !important;
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  -webkit-flex-direction: column !important;
+  flex-direction: column !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  -webkit-justify-content: flex-end !important;
+  justify-content: flex-end !important;
+  pointer-events: none !important;
+  z-index: 60 !important;
+}
+
+/* Cue-level line positioning must not override the container's bottom
+   alignment on this WebKit build. */
+.shaka-text-container > * {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  margin-top: auto !important;
+}
+
+/* The MPD defines an 80% speaker region with top:10%; that inline region
+   position puts cues near the top of the picture. Keep the cue size and
+   centre alignment, but place the region just above the player footer. */
+.shaka-text-container .shaka-text-region {
+  position: absolute !important;
+  top: auto !important;
+  bottom: 100px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-flex-direction: column !important;
+  flex-direction: column !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  -webkit-justify-content: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
 .titlehorizontallist .title {
   font-size: 32px;
 }

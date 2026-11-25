@@ -10,9 +10,12 @@ const rules=[
  '#more > svg {margin-top: -1px;}',
  '.tilefooter {overflow: visible !important; z-index: auto !important}',
  '.CULLINGposter .tilefooter {overflow: hidden !important; z-index: -1 !important}',
- '.CULLINGposter {margin: 14px 0px 9px !important}'
+ '.CULLINGposter {margin: 14px 0px 9px !important}',
+ '.WRAPPINGcarousel .widget.container.button.carouselItem:not(.active) .tilefooter {display: none}'
 ];
 for(const rule of rules)assert(css.includes(rule),'Search keyboard CSS missing: '+rule);
+assert(css.indexOf('.WRAPPINGcarousel .widget.container.button.carouselItem:not(.active) .tilefooter {display: none}') > css.indexOf('.CULLINGposter {margin: 14px 0px 9px !important}'),
+ 'Wrapping carousel footer hiding must sit after the CULLINGposter exclusion');
 assert(css.includes('.keySEARCH.keySEARCH {padding: 17px 7px}'),'SEARCH padding must outrank the later injected keyboard rule');
 assert(css.includes('#horizontalMainMenuCullingCarousel > .widget.container.button {vertical-align: bottom}'),'Horizontal menu buttons must bottom-align to the taller Home tile');
 console.log('PASS menu, keyboard and home-page CSS applied');

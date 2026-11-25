@@ -4,7 +4,7 @@ export function avplayHooks(text) {
         text=text.replace(signature,signature+body);
     }
     hook('initMediaElement:function(t,i,n){',
-        'if(window.vmAvPlay&&window.vmAvPlay.wants(n)){window.vmAvPlay.stage(this,t,i,n,e.getCurrentApplication().getRootWidget().outputElement);return;}this.vmNativeRetired=false;this.vmNativeErrorReported=false;');
+        'if(window.vmAvPlay&&window.vmAvPlay.wants(n,t,this)){window.vmAvPlay.stage(this,t,i,n,e.getCurrentApplication().getRootWidget().outputElement);return;}this.vmNativeRetired=false;this.vmNativeErrorReported=false;');
     hook('_reportError:function _reportError(e){','if(this.vmNativeRetired){if(this.vmNativeErrorReported)return;this.vmNativeErrorReported=true;}');
     hook('configure:function configure(e){','if(window.vmAvPlay)window.vmAvPlay.config(this,e);');
     hook('beginPlayback:function beginPlayback(){','if(this.vmNative)return window.vmAvPlay.begin(this);');

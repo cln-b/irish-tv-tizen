@@ -39,7 +39,6 @@
   apply:function(driver,player){
    selected='auto';if(!active||active.driver!==driver)return;
    var target=choice();
-   if(active.live)target=null;
    if(active.live&&window.vmFixedLive720Enabled){for(var i=0;i<active.options.length;i++)if(Number(active.options[i].value)<=720){target=active.options[i];break;}if(!target&&active.options.length)target=active.options[active.options.length-1];}
    try{
     player.setStreamingProperty('ADAPTIVE_INFO',target?'BITRATES='+target.bitrate+'|STARTBITRATE='+target.bitrate+'|SKIPBITRATE='+target.bitrate:'STARTBITRATE=HIGHEST');
@@ -47,11 +46,11 @@
     else console.log('VM AVPlay quality Auto high start');
    }catch(error){console.log('VM AVPlay quality unavailable '+error.name);}
   },
-  choices:function(){return active&&!active.live&&active.options.length?[{value:'auto',label:'Auto'}].concat(active.options):[];},
+  choices:function(){return active&&active.options.length?[{value:'auto',label:'Auto'}].concat(active.options):[];},
   selected:function(){return selected;},
   liveStatus:function(){if(!active||!active.live)return null;var height=active.driver.vmVideoHeight;return (window.vmFixedLive720Enabled?'Fixed':'Auto')+(height?' ('+height+'p)':'');},
   select:function(value){
-   if(!active||active.live||value===selected)return;
+   if(!active||value===selected)return;
    var options=this.choices(),allowed=false;
    for(var i=0;i<options.length;i++)if(options[i].value===value)allowed=true;
    if(!allowed)return;
