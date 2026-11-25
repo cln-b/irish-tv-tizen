@@ -24,18 +24,21 @@ function bridge(live,resume){
  const document={getElementById:()=>({__vue__:{_setupProxy:proxy,_setupState:{startTime:{value:resume}}}}),createElement:node,createEvent:()=>({initEvent(type){this.type=type;}})};
  const window={tg4Worldwide:worldwide,__tg4Diagnostics:{}};const ctx={window,webapis:{avplay:api},document};
  load('native-backend.js',ctx);const facade=window.__tg4NativeMedia(video),dash={destroy(){}};window.__tg4StartPlayer(dash,facade,selection.url);
- return {calls,events,container,video,dash,prepare:()=>prepared(),state:()=>state};
+ return {calls,events,container,video,dash,diag:window.__tg4Diagnostics.player,prepare:()=>prepared(),state:()=>state};
 }
 let p=bridge(true,120);p.prepare();assert.equal(p.state(),'PLAYING');
 assert.equal(p.calls.filter(c=>Array.isArray(c)&&c[0]==='drm').length,0,'Clear Live must skip DRM setup');
 assert.equal(p.calls.filter(c=>Array.isArray(c)&&c[0]==='seek').length,0,'Live must not inherit VOD resume');
 assert.ok(p.events.includes('loadedmetadata')&&p.events.includes('playing'));
-assert.ok(p.container.children.some(n=>n.textContent==='TG4 Worldwide'),'The live feed must be identified');
+assert.ok(!p.container.children.some(n=>n.textContent==='TG4 Worldwide'),'Worldwide live must not add a visible toast');assert.equal(p.diag.worldwide,true,'Worldwide state must remain diagnosable without UI');
 p.dash.destroy();assert.equal(p.state(),'NONE');assert.equal(p.container.children.length,0);assert.equal(p.video.style.visibility,'');
 p=bridge(false,120);p.prepare();assert.equal(p.state(),'PLAYING');
 assert.ok(p.calls.some(c=>Array.isArray(c)&&c[0]==='drm'&&c[1]==='PLAYREADY'));
 assert.ok(p.calls.some(c=>Array.isArray(c)&&c[0]==='seek'&&c[1]===120000),'Preserve the verified VOD resume path');
 p.dash.destroy();p=bridge(true,0);p.dash.destroy();p.prepare();assert.equal(p.state(),'NONE');assert.ok(!p.calls.includes('play'),'A cancelled preparation must not restart playback');
-const built=path.join(root,'../tv-app');assert.match(fs.readFileSync(path.join(built,'app.js'),'utf8'),/tg4Worldwide\.epg/);
+const built=path.join(root,'../tv-app'),builtApp=fs.readFileSync(path.join(built,'app.js'),'utf8');assert.match(builtApp,/tg4Worldwide\.epg/);
+assert.ok(builtApp.includes('img/playerIconPink.b24924ee.svg'),'Header logo must be bundled locally');
+assert.ok(!builtApp.includes('https://smarttv.tg4.ie/img/playerIconPink.b24924ee.svg'),'Header logo must not depend on the remote host');
+assert.ok(fs.existsSync(path.join(built,'img/playerIconPink.b24924ee.svg')),'Bundled logo asset must exist');
 const config=fs.readFileSync(path.join(built,'config.xml'),'utf8');assert.match(config,/<name>TG4\+<\/name>/);assert.match(config,/id="Tg4Live001.Player"/);
 console.log('PASS Worldwide EPG/token isolation, native clear playback/cleanup, VOD DRM/resume, cancelled startup, and packaged integration');
