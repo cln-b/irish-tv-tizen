@@ -1,0 +1,146 @@
+/* WebKit 538.1 implements the 2012 prefixed flexbox. It discards a bare
+   `display:flex` declaration, so profile/sidebar and login children fall back
+   to block layout and their padding/margins are not applied as TG4's browser
+   build intended. Re-declare the affected components with -webkit-flex and
+   the matching prefixed flex properties. Keep every selector scoped to the
+   upstream data-v scope so the rest of the app is untouched. */
+.main_area[data-v-85c96466],
+.nav_wrapper[data-v-85c96466],
+.top_bar[data-v-85c96466],
+.profile_link[data-v-85c96466],
+.settings_link[data-v-85c96466],
+.sidebar[data-v-85c96466],
+.content[data-v-85c96466],
+.nav_link[data-v-85c96466],
+.user-container[data-v-00e8ab81],
+.sub-nav[data-v-00e8ab81],
+.profile-list[data-v-059afbbf],
+.full-screen-state[data-v-059afbbf],
+.section-state[data-v-059afbbf],
+.grid[data-v-7279a7a3],
+.cms-item-container[data-v-8c064512],
+.login_container[data-v-21e9c5e0],
+.login_container_explanation[data-v-21e9c5e0],
+.cpa_container[data-v-21e9c5e0],
+.cpa_instructions_container[data-v-21e9c5e0],
+.user-details-home[data-v-a8e0e570],
+.user-details-header-container[data-v-a8e0e570],
+.user-details-text-container[data-v-a8e0e570],
+.user-details-mid-section[data-v-a8e0e570]{
+  display:-webkit-flex !important;
+}
+
+/* Direction must be re-stated on the prefixed flexbox; the old -webkit-box
+   values do not carry over. */
+.main_area[data-v-85c96466],
+.nav_wrapper[data-v-85c96466],
+.sidebar[data-v-85c96466],
+.user-container[data-v-00e8ab81],
+.profile-list[data-v-059afbbf],
+.full-screen-state[data-v-059afbbf],
+.section-state[data-v-059afbbf],
+.login_container[data-v-21e9c5e0],
+.login_container_explanation[data-v-21e9c5e0],
+.cpa_instructions_container[data-v-21e9c5e0],
+.user-details-home[data-v-a8e0e570],
+.user-details-text-container[data-v-a8e0e570]{
+  -webkit-flex-direction:column !important;
+}
+.top_bar[data-v-85c96466],
+.sub-nav[data-v-00e8ab81],
+.cms-item-container[data-v-8c064512],
+.cpa_container[data-v-21e9c5e0],
+.user-details-header-container[data-v-a8e0e570],
+.user-details-mid-section[data-v-a8e0e570]{
+  -webkit-flex-direction:row !important;
+}
+
+.top_bar[data-v-85c96466],
+.profile_link[data-v-85c96466],
+.settings_link[data-v-85c96466],
+.sidebar[data-v-85c96466],
+.nav_link[data-v-85c96466],
+.user-container[data-v-00e8ab81],
+.full-screen-state[data-v-059afbbf],
+.section-state[data-v-059afbbf],
+.login_container[data-v-21e9c5e0],
+.login_container_explanation[data-v-21e9c5e0],
+.cpa_container[data-v-21e9c5e0],
+.user-details-home[data-v-a8e0e570],
+.user-details-header-container[data-v-a8e0e570],
+.user-details-mid-section[data-v-a8e0e570]{
+  -webkit-align-items:center !important;
+}
+.cpa_instructions_container[data-v-21e9c5e0],
+.user-details-text-container[data-v-a8e0e570]{
+  -webkit-align-items:flex-start !important;
+}
+.cpa_container[data-v-21e9c5e0],
+.nav_link[data-v-85c96466],
+.full-screen-state[data-v-059afbbf]{
+  -webkit-justify-content:center !important;
+}
+
+.main_area[data-v-85c96466],
+.content[data-v-85c96466],
+.profile-list[data-v-059afbbf],
+.user-container[data-v-00e8ab81],
+.user-details-home[data-v-a8e0e570],
+.user-details-mid-section[data-v-a8e0e570]{
+  -webkit-flex:1 1 auto !important;
+}
+.grid[data-v-7279a7a3]{
+  -webkit-flex-wrap:wrap !important;
+}
+.grid>[data-v-7279a7a3]{
+  box-sizing:border-box;
+  -webkit-flex:0 0 auto;
+  padding-right:25px;
+  margin-bottom:25px;
+}
+.cms-item-container[data-v-8c064512]{
+  -webkit-align-items:center !important;
+  width:100%;
+  box-sizing:border-box;
+}
+
+/* Bookmarks and History: match TG4's browser geometry on WebKit 538.1. The
+   profile sub-nav margins and the 1200px list padding only line up once the
+   user container and its children are real prefixed flex containers. */
+.list-grid[data-v-059afbbf]{
+  width:1200px;
+  max-width:100%;
+  margin:0 auto;
+  padding:0 0 80px 25px;
+  box-sizing:border-box;
+}
+
+/* TG4's Details component uses display:inline on its QR div along with a
+   fixed width/height. WebKit 538.1 ignores width/height on an inline
+   non-replaced element, so keep the block override and the prefixed row. */
+.user-details-mid-section[data-v-a8e0e570]{
+  display:-webkit-flex !important;
+  margin-top:40px !important;
+  max-width:80%;
+}
+.user-details-qr-code[data-v-a8e0e570]{
+  display:block !important;
+  background-image:url("img/profile-qr.png") !important;
+  background-color:#191919;
+  background-position:center center;
+  background-repeat:no-repeat;
+  background-size:contain;
+  width:300px;
+  min-width:300px;
+  height:300px;
+  min-height:300px;
+  margin-left:80px;
+}
+
+/* The Details QR is a fixed link to the account profile. Bundle the PNG from
+   the SmartTV HAR so it does not depend on api.qrserver.com at runtime. */
+.cpa_qr_code[data-v-21e9c5e0]{
+  display:block !important;
+  width:447px !important;
+  margin-bottom:53px;
+}
