@@ -1,19 +1,20 @@
-# Handoff — updated 24 November 2026
+# Handoff — updated 26 November 2026
 
-## TG4+ — added 14 November 2026
+## TG4+ — current 1.0.0
 
-* Version 0.3.2 retains the production catalogue, daily catch-up and native VOD backend, with `TG4+` as the manifest display name.
-* Worldwide Live uses the broadcaster's official clear DASH feed, fetched fresh by provider ID. Moving picture and sound were confirmed on the physical TV in the temporary native control.
-* The packaged Live carousel exposes only Worldwide and labels it in the card/player. Ireland tokens are never sent for the Worldwide channel. No Mac playback server is required.
-* Native VOD picture/sound, pause/play, Return and resume were verified in the 0.3.1 baseline. Local checks cover 0.3.2 Live integration, cancellation/cleanup and preservation of VOD DRM/resume. The 0.3.2 WGT itself has not been installed/tested on the TV.
-* Protected Ireland/Cúla4 Live remains unresolved: browser PlayReady challenges receive HTTP 400 and native setup fails. Those channels and their timeshift variants are excluded from this release.
-* Worldwide may have different programme availability or rights blackouts. Subtitles and account-saved Continue remain unverified.
+* Version 1.0.0 is the installed and hardware-verified build. It retains the production catalogue, daily catch-up and native VOD backend, with `TG4+` as the manifest display name.
+* Native VOD picture/sound, Irish/English/Off WebVTT subtitles, Return cleanup and resume were verified on the physical TV in the installed 1.0.0 build.
+* Live is restricted to the clear TG4 international provider (`6384196213112`) only. The unsupported PlayReady TG4/Cúla4/TG4+1 streams are not exposed. TG4's own API LIVE rail is discarded from **Home** and replaced by one bottom `live-rail` with only that clear Worldwide channel; the frontend creates it lazily when the page is scrolled down. Hardware-verified after scrolling Home: one WW/no-token tile using TG4's `currentShow`/`nextShow`, artwork and times unchanged (for example `An Aimsir Láithreach` then `Cheers`), with no app-added “Worldwide” text anywhere on screen; opening it reached `AVPlay`/`PLAYING` with no DRM setup or events, and `#/live` contains only that stream. It uses the official clear DASH feed, fetched fresh by provider ID. No Mac playback server is required.
+* Public build: `window.__tg4LoginHelper=""`. A privately signed WGT can carry a user-owned helper for sign-in; never publish or commit that helper URL.
+* Protected Ireland/Cúla4 Live remains unresolved on 1.0.0. The native backend reaches the real PlayReady source, but AVPlay `setDrm('PLAYREADY','SetProperties',...)` fails after `open` with `UnknownError::Unknown Error in AVPlayManager.setDrm().`. The legacy-EME CDM challenge is rejected HTTP 400. Manifest, LA_URL, timeline, initData, setup-order and Widevine experiments did not fix it. Do not claim protected Live as supported.
+* WebKit 538.1 UI is packaged and hardware-verified: the four supplied Home rules in `profile-ui.css` are intact, and the play/pause button now uses a changing Vue key plus 60px intrinsic SVGs. On TV, selecting the button creates a fresh focused node; both `pause_icon.svg` and `play_icon.svg` report `60x60`, the element stays `68x68` with `transform:none`, and the rejected whole-overlay `data-scaled` workaround is absent.
+* Worldwide may have different programme availability or rights blackouts. Live subtitles remain unverified.
 
 ## RTÉ
 
 Release 1.2 (manifest 1.2.0) uses frontend 0.170.54075_2 and the existing Worker, blank public helper configuration and app identity. Use your own Worker and SECRET_KEY for sign-in. The build includes the Samsung DRM privilege, legacy PlayReady workarounds, readable captions, no-pause Settings with a quality picker, and live-only disabling of DAI/SSAI. A private WGT can carry a configured helper for testing; the public `tv-app` and unsigned release keep it blank.
 
-20 November: a 20-minute RTÉ One live watch passed at 1920×1080 with no DAI/SSAI URLs and no errors. Controlled reloads and forced 6008 tests exposed the legacy PlayReady session limitation; automatic 6008 retry was reverted after it produced `HTTP_ERROR 1002` on live. Clean relaunch remains the reliable recovery. A signed-in session and the login helper were confirmed working on the TV after reinstalling the private WGT. The public release checker passes for RTÉ; the repository-wide checker is blocked by an unrelated TG4 validation error.
+20 November: a 20-minute RTÉ One live watch passed at 1920×1080 with no DAI/SSAI URLs and no errors. Controlled reloads and forced 6008 tests exposed the legacy PlayReady session limitation; automatic 6008 retry was reverted after it produced `HTTP_ERROR 1002` on live. Clean relaunch remains the reliable recovery. A signed-in session and the login helper were confirmed working on the TV after reinstalling the private WGT. The public release checker passes for RTÉ; the TG4 validation error was fixed and `scripts/package-release.py --app tg4` now passes.
 
 14 November: the user confirmed the square RTÉjr logo after a targeted map-lookup fallback and the regular logo after using the official direct PNG (SVG fallback retained). Public config/label downloads start earlier, but total startup can still take 30–40 seconds. A saved-account Home-mount gate made loading worse and exposed the sidebar before Home loaded; it was removed. Do not reintroduce that failed experiment. The checked build has been promoted into the public prebuilt files and repackaged locally for GitHub; it has not been published. See [RTE-STARTUP.md](RTE-STARTUP.md).
 

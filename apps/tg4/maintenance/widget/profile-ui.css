@@ -144,3 +144,25 @@
   width:447px !important;
   margin-bottom:53px;
 }
+
+/* WebKit 538.1 home UI fixes: the TV lacks support for modern flexbox from 
+   the original CSS. Overrides raw so prefixed values survive the build. */
+.side-by-side .tg4-image-asset{
+  width:auto;
+  height:100%;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+.item-text{
+  width:100%;
+}
+.split-panel-item{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+}
+.category-tile{
+  height:auto;
+  -webkit-box-flex:1;
+}
+

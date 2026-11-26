@@ -61,8 +61,15 @@
   var api=webapis.avplay,root=video.parentNode,view=document.getElementById('tg4-player').__vue__,proxy=view._setupProxy,selected=proxy.getPlaybackData(proxy.video),ready=false,paused=true,error=null,closed=false;
   var live=!!proxy.live,worldwide=live&&String(proxy.video.id)===window.tg4Worldwide.providerId;
   var nativeTracks=[],activeTrack=null,selectedTextIndex=-1,pendingTextIndex=0,captionNode=null,captionText=null,lastCaption='';
-  var diag=window.__tg4Diagnostics.player={backend:'AVPlay',videoPresent:!!video,initializeCalled:true,worldwide:worldwide,events:[]};
+  var media=video._nativeVideo||video;
+  var diag=window.__tg4Diagnostics.player={backend:'AVPlay',videoPresent:!!video,initializeCalled:true,worldwide:worldwide,events:[],setup:[]};
   function note(type,value){diag.events.push([type,String(value).slice(0,200)]);if(diag.events.length>40)diag.events.shift();}
+  function setupNote(type,value){diag.setup.push([type,String(value).slice(0,200)]);if(diag.setup.length>40)diag.setup.shift();}
+  function urlShape(target){
+   var text=String(target||''),match=/^([a-z]+:\/\/[^/?#]+)([^?#]*)(\?[^#]*)?/i.exec(text);
+   if(!match)return {length:text.length};
+   return {protocol:match[1].split(':')[0],host:match[1].replace(/^[a-z]+:\/\//i,''),path:match[2].replace(/eyJ[A-Za-z0-9_.-]+/g,'<JWT>').replace(/[A-Za-z0-9_-]{32,}/g,'<SEG>'),queryKeys:(match[3]||'').slice(1).split('&').filter(Boolean).map(function(item){return item.split('=')[0];}),length:text.length};
+  }
   function emit(type){var e=document.createEvent('Event');e.initEvent(type,true,false);video.dispatchEvent(e);}
   function call(name,fallback){try{return api[name]();}catch(e){return fallback;}}
   function setState(name,value){try{if(view._setupState&&view._setupState[name])view._setupState[name].value=value;}catch(e){}try{if(view._setupProxy)view._setupProxy[name]=value;}catch(e){}}
@@ -148,8 +155,18 @@
   dash.enableText=function(enabled){if(enabled)selectText(selectedTextIndex>=0?selectedTextIndex:0);else disableText()};
   function fail(e){diag.error=String(e&&e.message||e);error={code:4,message:diag.error};note('error',diag.error);emit('error');}
   try{
-   api.open(url);api.setDisplayRect(0,0,1920,1080);api.setListener({onbufferingstart:function(){emit('waiting')},onbufferingcomplete:function(){emit('canplay');emit('playing');updateCaptions(video.currentTime)},oncurrentplaytime:function(t){diag.time=t;updateCaptions(t/1000);emit('timeupdate')},onerror:fail,onerrormsg:function(c,m){note(c,String(m).split('?')[0].slice(0,140))},ondrmevent:function(t,d){note('drm',t+':'+(d&&d.name||'')+':'+(d&&d.error_code||''))},onstreamcompleted:function(){emit('ended')}});
-   var license=selected.protData&&selected.protData['com.microsoft.playready'];if(worldwide&&selected.protData)throw Error('Worldwide source unexpectedly requires DRM');if(license)api.setDrm('PLAYREADY','SetProperties',JSON.stringify({DeleteLicenseAfterUse:true,LicenseServer:license.serverURL}));
+   var license=selected.protData&&selected.protData['com.microsoft.playready'];
+   if(worldwide&&selected.protData)throw Error('Worldwide source unexpectedly requires DRM');
+   setupNote('state-before-open',api.getState());setupNote('media-url',JSON.stringify(urlShape(url)));
+   api.open(url);
+   setupNote('state-after-open',api.getState());
+   api.setDisplayRect(0,0,1920,1080);api.setListener({onbufferingstart:function(){emit('waiting')},onbufferingcomplete:function(){emit('canplay');emit('playing');updateCaptions(video.currentTime)},oncurrentplaytime:function(t){diag.time=t;updateCaptions(t/1000);emit('timeupdate')},onerror:fail,onerrormsg:function(c,m){note(c,String(m).split('?')[0].slice(0,140))},ondrmevent:function(t,d){note('drm',t+':'+(d&&d.name||'')+':'+(d&&d.error_code||''))},onstreamcompleted:function(){emit('ended')}});
+   if(license){
+    setupNote('license-url',JSON.stringify(urlShape(license.serverURL)));setupNote('state-before-drm',api.getState());
+    try{api.setDrm('PLAYREADY','SetProperties',JSON.stringify({DeleteLicenseAfterUse:true,LicenseServer:license.serverURL}));setupNote('setDrm-ok',api.getState());}
+    catch(e){setupNote('setDrm-error',(e&&e.name||'Error')+':'+(e&&e.code||'')+':'+String(e&&e.message||e));throw e;}
+   }
+   setupNote('state-before-prepare',api.getState());
    api.prepareAsync(function(){if(closed)return;ready=true;diag.prepared=true;var resume=live?0:Number(proxy.startTime)||0;function begin(){emit('loadedmetadata');video.play();}if(resume>0){diag.resumeRequested=resume;api.seekTo(Math.round(resume*1000),function(){diag.resumeCompleted=api.getCurrentTime()/1000;try{view._setupState.startTime.value=0;}catch(ignore){}begin();},function(e){note('resume-error',String(e));begin();});}else begin();},fail);
    loadSubtitles();
   }catch(e){fail(e)}

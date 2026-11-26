@@ -1,5 +1,31 @@
 # TG4+ for older Samsung TVs
 
-Version **0.3.2**, for Tizen 2.4. Was supposed to retain TG4's catalogue, series pages, daily catch-up and native on-demand playback. With Live offering the separate **TG4 Worldwide** stream (labelled on screen for testing). Worldwide programme rights possibly can differ from the main TG4 stream. Standard TG4 Ireland, Cúla4 and timeshift channels do not work.
+Patched TG4+ for Tizen 2.4, based on version `2.0.0`, tested on a Samsung UE40K5500.
 
-Except 0.3.2 is broken and will not respond to OK inputs, so use the published 1.0.0 instead which has on demand content working.
+## What works
+
+- **On demand:** Working via native AVPlay. Might take a while to reach 1080p
+- **Subtitles:** Irish and English subtitles available on supported programmes.
+- **Live:** Working via the "Worldwide" stream. Programme rights may differ from the Ireland feed.
+
+## Limitations
+
+- TG4+1, Cúla4 and Spórt TG4 live streams are not supported.
+- Subtitles are not available for live programmes (not supplied by TG4 for any device)
+- Sign in not currently implemented
+
+## Install
+
+You’ll need [Tizen Studio](https://download.tizen.org/sdk/Installer/tizen-sdk_10.0/) with `TV Extensions-XX.X` and `Samsung Certificate Extension` from Package Manager, and developer mode enabled on the TV.
+
+1. Download the unsigned WGT from [releases](https://www.github.com/cln-b/irish-tv-tizen/releases).
+1. Under File > Import select the release WGT as a Tizen > Tizen Project.
+1. Under Tools > Certificate Manager create a Samsung TV profile. The distributor certificate must include your TV’s DUID. Run:
+
+    ```bash
+    /path/to/tizen-studio/tools/sdb connect <TV IP address>
+    /path/to/tizen-studio/tools/sdb shell 0 getduid
+    ABCDEFGH1IJK2 # your DUID
+    ```
+
+1. Connect the TV in Device Manager, select it as the target, then right click the project in the sidebar and choose **Run As → Tizen Web Application**.

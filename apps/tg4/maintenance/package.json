@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node tools/build.cjs",
-    "test": "node tests/worldwide.cjs && node tests/subtitles.cjs && node tests/login.cjs && node tests/profile-ui.cjs"
+    "test": "node tests/worldwide.cjs && node tests/live-drm.cjs && node tests/subtitles.cjs && node tests/login.cjs && node tests/profile-ui.cjs && node tests/player-icon.cjs"
   },
   "dependencies": {
     "@babel/core": "^8.1.0",

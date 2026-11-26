@@ -1,6 +1,6 @@
 # Building TG4+
 
-The ready-to-sign app is already built in `../tv-app`. To regenerate it with Node.js 24 or newer:
+`../tv-app` is the generated app source. Make changes in `maintenance/`, then rebuild:
 
 ```sh
 npm ci
@@ -8,12 +8,26 @@ npm run build
 npm test
 ```
 
-The builder reads frozen public production assets from `upstream/`, applies the established WebKit 538.1 compatibility patches, transpiles JavaScript to ES5, and copies native playback/widget assets from `widget/`. It recreates `../tv-app`; the version comes from `../VERSION`. No developer workspace paths or external build server are required.
+From the repository root, validate the unsigned public package with:
 
-`worldwide.js` maps the Live carousel to the official Worldwide provider ID, keeps polling metadata fresh, and never reuses an Ireland token for another channel. Current metadata is fetched by the original application at playback time. The card and player identify Worldwide. Daily catch-up remains the original on-demand listing.
+```sh
+python3 scripts/package-release.py --app tg4
+```
 
-`native-backend.js` uses the verified Samsung AVPlay backend: clear Worldwide playback skips DRM configuration; protected VOD retains its own licence URL and native resume. Return goes through the app's existing cleanup. The isolated browser/Shaka DRM experiments, HARs, debug scripts and private captures are excluded.
 
-Tests cover channel/credential routing, clear-native startup and cancellation, Return cleanup, and preservation of VOD DRM/resume. They use a simulated native API; physical decoder, captions, account state and long-running live playback require TV checks. The underlying Worldwide stream has physical picture/sound confirmation, but the packaged 0.3.2 UI integration has not been installed/tested on the TV.
+## What this build does
 
-From the repository root, package with `python3 scripts/package-release.py --app tg4`. Public releases are unsigned; each recipient signs with their own Samsung TV profile.
+- Live is limited to TG4's clear international feed, provider `6384196213112`. Protected Ireland, Cúla4 and TG4+1 streams are excluded on this TV.
+- Home replaces TG4's API LIVE rail with one bottom LIVE rail for that feed. The existing UI creates the rail when Home is scrolled down. Programme titles, artwork and times are passed through from TG4 unchanged, with no added “Worldwide” labels.
+- Playback uses AVPlay for on-demand and clear Live. On-demand keeps its DRM, resume and WebVTT subtitle support. Return removes the AVPlay object and captions; diagnostics are redacted.
+- WebKit 538.1 UI fixes live in `profile-ui.css`. The player chunk recreates the play/pause `<img>` on each toggle and uses 60px intrinsic SVG sizes to avoid the icon repaint bug.
+- A whole-overlay scaling workaround was tried and removed. It was not the cause of the icon problem.
+- Protected Ireland/Cúla4 Live is not supported on this TV: AVPlay `setDrm` fails and the legacy CDM challenge is rejected. No hardcoded licence URLs, manifest rewrites or private credentials are included.
+
+## Sign-in
+
+Public builds have `window.__tg4LoginHelper=""`. A private build can supply a user-owned helper with `TG4_LOGIN_HELPER`. Helper values are not stored in the repository.
+
+## Checks
+
+Tests cover Live/Home mapping, token isolation, native playback/cleanup, VOD DRM/subtitles, login routing, CSS and the play/pause icon fix. Physical TV checks are still needed for decoder output, captions, account state and long-running Live playback.

@@ -26,15 +26,23 @@ function js(text,name){
  const sdk='p("$WEBAPIS/webapis/webapis.js")';if(!app.includes(sdk))throw Error('Samsung SDK reference missing');app=app.replace(sdk,'(window.webapis?Promise.resolve():p(window.__tg4Root+"$WEBAPIS/webapis/webapis.js"))');
  for(const part of ['js','css']){let old=part==='js'?'r.u=e=>"js/"':'r.miniCssF=e=>"css/"';if(!app.includes(old))throw Error('Chunk loader changed');app=app.replace(old,old.replace('=>','=>'+root));}
  app=app.replace('r.p="/"','r.p=""');
- // Preserve the official SmartTV EPG live token. Bare EPG requests omit the
- // SmartTV header and return a different format token; that diagnostic result
- // must not change the production app's metadata selection.
+ // Preserve the official SmartTV EPG request. Its header changes the response,
+ // do not expose the unsupported PlayReady Ireland/Cúla4 channels again.
  const liveToken='const o=r.liveToken||void 0,i=yield a.A.Brightcove.getVideo';if(!app.includes(liveToken))throw Error('Live metadata action changed');
- const epg='return yield e.request.get(`${e.baseUrl}/epg/current`)';if(app.split(epg).length!==2)throw Error('Live EPG request changed');app=app.replace(epg,'return yield e.request.get(`${e.baseUrl}/epg/current`).then(window.tg4Worldwide.epg)');
+ const epg='return yield e.request.get(`${e.baseUrl}/epg/current`)';if(app.split(epg).length!==2)throw Error('Live EPG request changed');
+ app=app.replace(epg,'return yield e.request.get(`${e.baseUrl}/epg/current`).then(window.tg4Worldwide.epg)');
+ // Live rail is created lazily when the Home page is scrolled down.
+ const homeRails='x.value=e.rails,L.value="success"';if(app.split(homeRails).length!==2)throw Error('Home rail polling changed');
+ app=app.replace(homeRails,'x.value=window.tg4Worldwide.homeRails(e.rails),L.value="success"');
  const scale='e.style.setProperty("--app-scale",`${a}`)';if(!app.includes(scale))throw Error('Scaling code changed');app=app.replace(scale,'window.__tg4SetScale(a)');
  app=app.replace('"//peach-static.ebu.io/peach-collector.min.js"',root+'"peach.js"');
  js(app,'app.js');js(fs.readFileSync(src+'/vendors.js','utf8'),'vendors.js');js(fs.readFileSync(src+'/peach.js','utf8'),'peach.js');
  for(const file of fs.readdirSync(src+'/chunks')){let chunk=fs.readFileSync(src+'/chunks/'+file,'utf8');if(file.startsWith('627-')){const load='if(yield he(null===h||void 0===h?void 0:h.params.videoId,G.value,j.value,n),C.value)';if(!chunk.includes(load))throw Error('Player startup changed');chunk=chunk.replace('if(kt.value&&z.value&&O.value){let t=z.value.time();try{','if(kt.value&&z.value&&O.value&&m.value&&m.value.readyState>0){try{let t=z.value.time();');
+ // WebKit 538.1 mis-paints the second SVG loaded into the same focused <img>:
+ // the icon halves and moves to the top-left of the white circle. Give the
+ // play/pause image a changing Vue key so every toggle creates a fresh node,
+ // which renders at the CSS size like the first paint after the overlay shows.
+ const iconSwap='}],ref:"play-pause",staticClass:"playback-button live"';if(chunk.split(iconSwap).length!==2)throw Error('Play/pause icon node changed');chunk=chunk.replace(iconSwap,'}],key:n.playbackPaused?"play":"pause",ref:"play-pause",staticClass:"playback-button live"');
 chunk=chunk.replace(',z.value&&(z.value.destroy(),gt("destroyed dash player"));const n=Ut.getAdapter();n&&(gt("NPAW: Fire Stop"),n.fireStop())',';try{const n=Ut.getAdapter();n&&(gt("NPAW: Fire Stop"),n.fireStop())}catch(error){gt("Analytics cleanup: "+error)}finally{z.value&&(z.value.destroy(),gt("destroyed dash player"))}');chunk=chunk.replace('z.value.destroy()','window.__tg4DestroyPlayer(z.value)');chunk=chunk.replace('const r=m.value;z.value=dashjs.MediaPlayer().create()','const r=m.value=window.__tg4NativeMedia(m.value);z.value=dashjs.MediaPlayer().create()');chunk=chunk.replace('t.initialize(r,n.url,!0)','window.__tg4StartPlayer(t,r,n.url)');chunk=chunk.replace(load,load.replace(',C.value)',',yield new Promise(resolve=>s.proxy.$nextTick(resolve)),C.value)'));}
 chunk=chunk.replace('"./assets/npaw/dash.json"','window.__tg4Root+"assets/npaw/dash.json"');js(chunk,'js/'+file);}
  for(const [name,file] of [['main.css',src+'/app.css'],['profile-ui.css',path.join(widget,'profile-ui.css')],...fs.readdirSync(src+'/css').map(f=>['css/'+f,src+'/css/'+f])]){let css=fs.readFileSync(file,'utf8').replace(/url\((["']?)((?:\.\.\/|\/)[^)"']+)\1\)/g,(_,q,u)=>'url("'+new URL(u,'https://smarttv.tg4.ie/css/app.css').href+'")');css=css.replace('scale(var(--app-scale,1))','scale(1)');// profile-ui.css is already written for WebKit 538.1: autoprefixer's safari 6

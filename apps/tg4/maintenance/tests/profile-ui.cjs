@@ -21,6 +21,10 @@ assert.match(flat,/\.cms-item-container\[data-v-8c064512\][^}]*display:-webkit-f
 assert.match(flat,/-webkit-flex-direction:(column|row) !important/,'Prefixed flex direction must be set');
 assert.match(flat,/-webkit-align-items:(center|flex-start) !important/,'Prefixed alignment must be set');
 assert.match(flat,/-webkit-flex:1 1 auto !important/,'Prefixed grow/shrink must be set');
+assert.match(flat,/\.side-by-side \.tg4-image-asset\s*\{[^}]*width:auto;[^}]*height:100%;[^}]*left:50%;[^}]*top:50%;[^}]*transform:translate\(-50%,-50%\)/,'Substitute for object-fit:cover');
+assert.match(flat,/\.item-text\s*\{[^}]*width:100%/,'Fix text overflowing instead of ellipsis');
+assert.match(flat,/\.split-panel-item\s*\{[^}]*display:-webkit-box;[^}]*-webkit-box-orient:vertical/,'Fix invisible category labels');
+assert.match(flat,/\.category-tile\s*\{[^}]*height:auto;[^}]*-webkit-box-flex:1/,'Fix invisible category labels');
 const declarations=ui.replace(/\/\*[\s\S]*?\*\//g,'');
 assert.ok(!/display:\s*flex/.test(declarations),'No bare display:flex may remain in the WebKit 538.1 override');
 const png=fs.readFileSync(path.join(app,'img/profile-qr.png'));

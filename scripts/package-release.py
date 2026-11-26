@@ -21,8 +21,18 @@ def validate(name):
   if not re.search(r'MAX_RECOVERY_ATTEMPTS=window\.vmAvPlay.*?\?0:3',(app/'tv-app/whitelabel/app/release/1.172.0/static/script/appui/components/player/live.js').read_text()):raise ValueError('Native live fresh-retry protection is missing')
  if name=='tg4':
   if manifest.find('{http://www.w3.org/ns/widgets}name').text!='TG4+':raise ValueError('TG4 display name must be TG4+')
-  if 'tg4Worldwide.epg' not in (app/'tv-app/app.js').read_text():raise ValueError('TG4 Worldwide routing is missing')
-  if '6384196213112' not in (app/'tv-app/worldwide.js').read_text():raise ValueError('TG4 Worldwide identity is missing')
+  app_js=(app/'tv-app/app.js').read_text()
+  html=(app/'tv-app/index.html').read_text()
+  worldwide_js=(app/'tv-app/worldwide.js').read_text()
+  if '/epg/current' not in app_js:raise ValueError('TG4 default SmartTV EPG request is missing')
+  if 'tg4Worldwide.epg' not in app_js or 'tg4Worldwide.homeRails' not in app_js:raise ValueError('TG4 Worldwide-only Live/Home rail is missing')
+  if '_tg4Visible' in app_js:raise ValueError('RailsContainer render patch must not be released; Home rail is lazy')
+  if '6384196213112' not in worldwide_js:raise ValueError('TG4 Worldwide identity is missing')
+  if 'result.streams = []' not in worldwide_js:raise ValueError('TG4 baseline Worldwide-only Live mapping is missing')
+  if "rail.type === 'LIVE'" not in worldwide_js:raise ValueError('TG4 Home LIVE rail must replace the API Ireland LIVE rail')
+  if 'window.__tg4LoginHelper=""' not in html:raise ValueError('TG4 public login helper must be blank')
+  player=next((app/'tv-app/js').glob('627-*.js'),None)
+  if player is None or 'key:n.playbackPaused?"play":"pause"' not in player.read_text():raise ValueError('TG4 play/pause WebKit SVG icon replacement is missing')
   for p in (app/'tv-app').rglob('*'):
    if p.is_file() and any(x in p.name for x in ['probe','native-test','legacy-eme']):raise ValueError('TG4 diagnostic experiment in public app: '+p.name)
  return app,version
