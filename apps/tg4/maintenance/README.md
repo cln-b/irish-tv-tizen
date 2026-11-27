@@ -24,10 +24,6 @@ python3 scripts/package-release.py --app tg4
 - A whole-overlay scaling workaround was tried and removed. It was not the cause of the icon problem.
 - Protected Ireland/Cúla4 Live is not supported on this TV: AVPlay `setDrm` fails and the legacy CDM challenge is rejected. No hardcoded licence URLs, manifest rewrites or private credentials are included.
 
-## Sign-in
-
-Public builds have `window.__tg4LoginHelper=""`. A private build can supply a user-owned helper with `TG4_LOGIN_HELPER`. Helper values are not stored in the repository.
-
 ## Checks
 
 Tests cover Live/Home mapping, token isolation, native playback/cleanup, VOD DRM/subtitles, login routing, CSS and the play/pause icon fix. Physical TV checks are still needed for decoder output, captions, account state and long-running Live playback.

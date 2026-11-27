@@ -12,7 +12,12 @@ def validate(name):
  for tag in ['content','icon']:
   element=manifest.find('{http://www.w3.org/ns/widgets}'+tag)
   if element is None or not (app/'tv-app'/element.get('src','')).is_file():raise ValueError(name+': missing '+tag)
- if name=='rte-player' and (app/'tv-app/login-helper-config.js').read_text().strip()!='window.__rteLoginHelper={"url":"","key":""};':raise ValueError('RTÉ helper settings must be blank in public releases')
+ if name=='rte-player':
+  if (app/'tv-app/login-helper-config.js').read_text().strip()!='window.__rteLoginHelper={"url":"","key":""};':raise ValueError('RTÉ helper settings must be blank in public releases')
+  worker=(ROOT/'worker/index.mjs').read_text()
+  for token in ("'/rte'", "'/tg4'", 'https://www.rte.ie', 'https://sso.tg4.ie', 'https://user.tg4.ie', 'SECRET_KEY', 'TG4_SECRET_KEY', 'X-RTE-Helper-Key', 'X-TG4-Helper-Key'):
+   if token not in worker:raise ValueError('Shared login Worker routes, endpoints or helper keys are missing')
+  if 'workers.dev' in worker:raise ValueError('Login Worker must not contain a deployed host')
  if name=='virgin-media-play':
   html=(app/'tv-app/whitelabel/app/release/1.172.0/default-webkit-default.html').read_text()
   if 'window.vmTimingProxy=null' not in html or 'window.vmDiagnosticsEnabled=false' not in html:raise ValueError('Virgin Media public build must have proxy/diagnostics disabled')
@@ -30,7 +35,12 @@ def validate(name):
   if '6384196213112' not in worldwide_js:raise ValueError('TG4 Worldwide identity is missing')
   if 'result.streams = []' not in worldwide_js:raise ValueError('TG4 baseline Worldwide-only Live mapping is missing')
   if "rail.type === 'LIVE'" not in worldwide_js:raise ValueError('TG4 Home LIVE rail must replace the API Ireland LIVE rail')
-  if 'window.__tg4LoginHelper=""' not in html:raise ValueError('TG4 public login helper must be blank')
+  if (app/'tv-app/login-helper-config.js').read_text().strip()!='window.__tg4LoginHelper={"url":"","key":""};':raise ValueError('TG4 public login helper URL and key must be blank')
+  if 'X-TG4-Helper-Key' not in (app/'tv-app/login-proxy.js').read_text():raise ValueError('TG4 helper key header injection is missing')
+  worker=(ROOT/'worker/index.mjs').read_text()
+  for token in ('TG4_SECRET_KEY','X-TG4-Helper-Key'):
+   if token not in worker:raise ValueError('TG4 Worker helper key support is missing')
+  if 'src="login-helper-config.js"' not in html:raise ValueError('TG4 generated app must load the helper config')
   player=next((app/'tv-app/js').glob('627-*.js'),None)
   if player is None or 'key:n.playbackPaused?"play":"pause"' not in player.read_text():raise ValueError('TG4 play/pause WebKit SVG icon replacement is missing')
   for p in (app/'tv-app').rglob('*'):

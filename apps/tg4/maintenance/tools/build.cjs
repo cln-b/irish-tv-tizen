@@ -2,9 +2,9 @@ const fs=require('fs'),path=require('path');
 const project=path.resolve(__dirname,'..'),widget=path.join(project,'widget');
 const deps=process.env.TG4_BUILD_NODE_MODULES||path.join(project,'node_modules');
 const version=fs.readFileSync(path.join(project,'../VERSION'),'utf8').trim();
-// A private helper is injected only into a locally built WGT. Release builds
-// leave this empty so no helper host is committed to the repository.
+// Private builds inject the helper URL and key; public builds generate empty values.
 const loginHelper=(process.env.TG4_LOGIN_HELPER||'').replace(/\/+$/,'');
+const loginHelperKey=process.env.TG4_LOGIN_HELPER_KEY||'';
 const babel=require(deps+'/@babel/core'),preset=require(deps+'/@babel/preset-env'),acorn=require(deps+'/acorn'),postcss=require(deps+'/postcss'),prefix=require(deps+'/autoprefixer');
 const src=path.join(project,'upstream'),out=path.join(project,'../tv-app');fs.rmSync(out,{recursive:true,force:true});fs.mkdirSync(out+'/js',{recursive:true});fs.mkdirSync(out+'/css',{recursive:true});
 const root='window.__tg4Root+';
@@ -26,8 +26,8 @@ function js(text,name){
  const sdk='p("$WEBAPIS/webapis/webapis.js")';if(!app.includes(sdk))throw Error('Samsung SDK reference missing');app=app.replace(sdk,'(window.webapis?Promise.resolve():p(window.__tg4Root+"$WEBAPIS/webapis/webapis.js"))');
  for(const part of ['js','css']){let old=part==='js'?'r.u=e=>"js/"':'r.miniCssF=e=>"css/"';if(!app.includes(old))throw Error('Chunk loader changed');app=app.replace(old,old.replace('=>','=>'+root));}
  app=app.replace('r.p="/"','r.p=""');
- // Preserve the official SmartTV EPG request. Its header changes the response,
- // do not expose the unsupported PlayReady Ireland/Cúla4 channels again.
+ // Preserve the official SmartTV EPG request because its header changes the
+ // response. The Worldwide mapping below selects only the clear live provider.
  const liveToken='const o=r.liveToken||void 0,i=yield a.A.Brightcove.getVideo';if(!app.includes(liveToken))throw Error('Live metadata action changed');
  const epg='return yield e.request.get(`${e.baseUrl}/epg/current`)';if(app.split(epg).length!==2)throw Error('Live EPG request changed');
  app=app.replace(epg,'return yield e.request.get(`${e.baseUrl}/epg/current`).then(window.tg4Worldwide.epg)');
@@ -52,7 +52,8 @@ chunk=chunk.replace('"./assets/npaw/dash.json"','window.__tg4Root+"assets/npaw/d
  fs.copyFileSync(deps+'/core-js-bundle/minified.js',out+'/polyfills.js');fs.copyFileSync(deps+'/whatwg-fetch/dist/fetch.umd.js',out+'/fetch.js');
  fs.copyFileSync(path.join(widget,'icon.png'),out+'/icon.png');
  const cssLinks=fs.readdirSync(out+'/css').sort().map(f=>'<link rel="stylesheet" href="css/'+f+'">').join('')+'<link rel="stylesheet" href="profile-ui.css">';
- fs.writeFileSync(out+'/index.html','<!doctype html><html><head><meta charset="utf-8"><script>window.__tg4Root=location.href.split("#")[0].split("?")[0].replace(/[^/]*$/,"");</script><script>window.__tg4LoginHelper='+JSON.stringify(loginHelper).replace(/</g,'\\u003c')+';</script><script src="polyfills.js"></script><script src="fetch.js"></script><script src="login-proxy.js"></script><script src="compat.js"></script><script src="worldwide.js"></script><script src="'+ '$WEBAPIS/webapis/webapis.js'+'"></script><link rel="stylesheet" href="main.css">'+cssLinks+'</head><body><div id="app"></div><script src="vendors.js"></script><script src="performance-shim.js"></script><script src="native-backend.js"></script><script src="app.js"></script></body></html>');
+ fs.writeFileSync(out+'/login-helper-config.js','window.__tg4LoginHelper='+JSON.stringify({url:loginHelper,key:loginHelperKey}).replace(/</g,'\\u003c')+';\n');
+ fs.writeFileSync(out+'/index.html','<!doctype html><html><head><meta charset="utf-8"><script>window.__tg4Root=location.href.split("#")[0].split("?")[0].replace(/[^/]*$/,"");</script><script src="login-helper-config.js"></script><script src="polyfills.js"></script><script src="fetch.js"></script><script src="login-proxy.js"></script><script src="compat.js"></script><script src="worldwide.js"></script><script src="'+ '$WEBAPIS/webapis/webapis.js'+'"></script><link rel="stylesheet" href="main.css">'+cssLinks+'</head><body><div id="app"></div><script src="vendors.js"></script><script src="performance-shim.js"></script><script src="native-backend.js"></script><script src="app.js"></script></body></html>');
  for(const file of ['compat.js','login-proxy.js','native-backend.js','performance-shim.js','worldwide.js']){const code=fs.readFileSync(path.join(widget,file),'utf8');acorn.parse(code,{ecmaVersion:5,allowReserved:true});fs.writeFileSync(out+'/'+file,code);}
  fs.writeFileSync(out+'/config.xml','<?xml version="1.0" encoding="UTF-8"?><widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://example.invalid/tg4" version="'+version+'.0" viewmodes="maximized"><name>TG4+</name><icon src="icon.png"/><content src="index.html"/><tizen:application id="Tg4Live001.Player" package="Tg4Live001" required_version="2.4"/><access origin="*" subdomains="true"/><tizen:allow-navigation href="*"/><tizen:privilege name="http://tizen.org/privilege/internet"/><tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/><tizen:content-security-policy>default-src * data: blob: &apos;unsafe-inline&apos; &apos;unsafe-eval&apos;;</tizen:content-security-policy><tizen:privilege name="http://developer.samsung.com/privilege/drmplay"/><tizen:profile name="tv-samsung"/><tizen:setting screen-orientation="landscape" context-menu="disable" hwkey-event="enable"/></widget>');
  console.log('Built TG4+ '+version+' with Worldwide Live and the native VOD backend: '+out);
