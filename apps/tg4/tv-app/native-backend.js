@@ -17,6 +17,18 @@
   var prefix=match[2].slice(0,match[2].lastIndexOf('/')+1);
   return match[1]+prefix+ref;
  }
+ function helperBase(){
+  var value=window.__tg4LoginHelper;
+  if(typeof value==='string')value=value.replace(/\/+$/,'');
+  else value=value&&value.url?String(value.url).replace(/\/+$/,''):'';
+  // The native AVPlay player follows the Worker's HTTP-to-HTTPS redirect on
+  // this TV. Manifest requests use the configured helper; account traffic
+  // continues over HTTPS.
+  return value?value.replace(/^https:/i,'http:'):'';
+ }
+ function dvrSourceUrl(target){
+  return String(target||'').replace(/playlist-dash\.mpd(?=[?#]|$)/,'playlist-dash-dvr.mpd');
+ }
  function parseManifest(text,base){
   var tracks=[],re=/<AdaptationSet\b([^>]*)>([\s\S]*?)<\/AdaptationSet>/gi,match,langMatch,labelMatch,baseMatch,lang,label;
   while((match=re.exec(String(text||'')))){
@@ -91,7 +103,7 @@
     track.loading=true;
     requestText(track.url,function(body,status){
      track.loading=false;
-     if(body){try{track.cues=parseVtt(body);}catch(e){note('subtitle-vtt-parse',track.language);}}else note('subtitle-vtt-failed',track.language+':'+status);
+     if(body){try{track.cues=parseVtt(body);}catch(e){note('subtitle-vtt-parse',track.language);}}else note('subtitle-vtt-response',track.language+':'+status);
      diag.subtitleCues=(diag.subtitleCues||0)+(track.cues?track.cues.length:0);
      note('subtitle-ready',track.language+':'+(track.cues?track.cues.length:0));
      if(activeTrack===track)updateCaptions(video.currentTime);
@@ -115,7 +127,7 @@
   }
   function requestText(target,onDone){
    try{
-    if(typeof XMLHttpRequest==='undefined'){onDone(null,'XMLHttpRequest unavailable');return;}
+    if(typeof XMLHttpRequest==='undefined'){onDone(null,'XMLHttpRequest absent');return;}
     var xhr=new XMLHttpRequest();xhr.open('GET',target,true);
     xhr.onreadystatechange=function(){if(xhr.readyState===4)onDone(xhr.status>=200&&xhr.status<300?xhr.responseText:null,xhr.status);};
     xhr.send();
@@ -124,7 +136,7 @@
   function loadSubtitles(){
    if(live||!url)return;
    requestText(url,function(manifest,status){
-    if(!manifest){note('subtitle-manifest-failed',status);return;}
+    if(!manifest){note('subtitle-manifest-response',status);return;}
     try{nativeTracks=parseManifest(manifest,url);}catch(e){note('subtitle-manifest-parse',e&&e.message||e);return;}
     diag.subtitleTracks=nativeTracks.length;
     if(!nativeTracks.length){note('subtitle-tracks',0);return;}
@@ -156,9 +168,25 @@
   function fail(e){diag.error=String(e&&e.message||e);error={code:4,message:diag.error};note('error',diag.error);emit('error');}
   try{
    var license=selected.protData&&selected.protData['com.microsoft.playready'];
-   if(worldwide&&selected.protData)throw Error('Worldwide source unexpectedly requires DRM');
+   var offset=0,dvrUrl='',base=helperBase();
+   if(worldwide&&live)offset=Math.abs(Number(proxy.offset)||0);
+   if(offset>0){
+    dvrUrl=dvrSourceUrl(url);
+    if(base&&dvrUrl!==url){
+     url=base+'/dvr?u='+encodeURIComponent(dvrUrl);
+     diag.timeshift={requested:offset,normalized:true};
+     setupNote('timeshift-url',JSON.stringify({length:url.length,queryKeys:['u'],path:base.slice(base.lastIndexOf('/')+1)+'/dvr'}));
+    }else{
+     diag.timeshift={requested:offset,normalized:false};
+     note('timeshift-original',offset);
+     offset=0;
+    }
+   }
+   if(worldwide&&selected.protData)throw Error('Worldwide source includes DRM protection');
    setupNote('state-before-open',api.getState());setupNote('media-url',JSON.stringify(urlShape(url)));
    api.open(url);
+   try{api.setStreamingProperty('ADAPTIVE_INFO','STARTBITRATE=HIGHEST');setupNote('adaptive-info','STARTBITRATE=HIGHEST');}
+   catch(e){setupNote('adaptive-info-error',(e&&e.name||'Error')+':'+(e&&e.code||''));}
    setupNote('state-after-open',api.getState());
    api.setDisplayRect(0,0,1920,1080);api.setListener({onbufferingstart:function(){emit('waiting')},onbufferingcomplete:function(){emit('canplay');emit('playing');updateCaptions(video.currentTime)},oncurrentplaytime:function(t){diag.time=t;updateCaptions(t/1000);emit('timeupdate')},onerror:fail,onerrormsg:function(c,m){note(c,String(m).split('?')[0].slice(0,140))},ondrmevent:function(t,d){note('drm',t+':'+(d&&d.name||'')+':'+(d&&d.error_code||''))},onstreamcompleted:function(){emit('ended')}});
    if(license){
@@ -167,7 +195,7 @@
     catch(e){setupNote('setDrm-error',(e&&e.name||'Error')+':'+(e&&e.code||'')+':'+String(e&&e.message||e));throw e;}
    }
    setupNote('state-before-prepare',api.getState());
-   api.prepareAsync(function(){if(closed)return;ready=true;diag.prepared=true;var resume=live?0:Number(proxy.startTime)||0;function begin(){emit('loadedmetadata');video.play();}if(resume>0){diag.resumeRequested=resume;api.seekTo(Math.round(resume*1000),function(){diag.resumeCompleted=api.getCurrentTime()/1000;try{view._setupState.startTime.value=0;}catch(ignore){}begin();},function(e){note('resume-error',String(e));begin();});}else begin();},fail);
+   api.prepareAsync(function(){if(closed)return;ready=true;diag.prepared=true;setupNote('state-after-prepare',api.getState());var resume=live?0:Number(proxy.startTime)||0;function begin(){emit('loadedmetadata');video.play();}if(resume>0){diag.resumeRequested=resume;api.seekTo(Math.round(resume*1000),function(){diag.resumeCompleted=api.getCurrentTime()/1000;try{view._setupState.startTime.value=0;}catch(ignore){}begin();},function(e){note('resume-error',String(e));begin();});}else if(offset>0){var target=Math.max(0,call('getDuration',0)/1000-offset);diag.offsetRequested=offset;diag.offsetTarget=target;if(target>0){api.seekTo(Math.round(target*1000),function(){diag.offsetCompleted=api.getCurrentTime()/1000;try{view._setupState.offset.value=0;}catch(ignore){}begin();},function(e){note('offset-error',String(e));begin();});}else begin();}else begin();},fail);
    loadSubtitles();
   }catch(e){fail(e)}
  };

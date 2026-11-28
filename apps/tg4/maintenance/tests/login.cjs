@@ -52,7 +52,7 @@ assert.equal((p.calls[0].init.headers||{})['X-TG4-Helper-Key'],undefined);
 const expected='window.__tg4LoginHelper={"url":"","key":""};';
 const index=fs.readFileSync(path.join(root,'../tv-app','index.html'),'utf8');
 for(const file of [path.join(root,'widget','login-helper-config.js'),path.join(root,'../tv-app','login-helper-config.js')]){
- assert.equal(fs.readFileSync(file,'utf8').trim(),expected,'Helper config must be an object with blank URL and key');
+ assert.ok(fs.readFileSync(file,'utf8').trim()===expected,'Helper config must be an object with blank URL and key');
 }
 assert.match(index,/src="login-helper-config\.js"/,'Generated release must load the helper config');
 assert.match(index,/login-proxy\.js/,'Generated release must include the proxy');

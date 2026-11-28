@@ -33,7 +33,8 @@ def validate(name):
   if 'tg4Worldwide.epg' not in app_js or 'tg4Worldwide.homeRails' not in app_js:raise ValueError('TG4 Worldwide-only Live/Home rail is missing')
   if '_tg4Visible' in app_js:raise ValueError('RailsContainer render patch must not be released; Home rail is lazy')
   if '6384196213112' not in worldwide_js:raise ValueError('TG4 Worldwide identity is missing')
-  if 'result.streams = []' not in worldwide_js:raise ValueError('TG4 baseline Worldwide-only Live mapping is missing')
+  if 'result.streams = mapped.streams' not in worldwide_js:raise ValueError('TG4 clear Live mapping is missing')
+  if 'delete channel.liveToken' not in worldwide_js or 'matches(item, worldwideId, 3600)' not in worldwide_js:raise ValueError('TG4 +1 timeshift or Ireland token isolation is missing')
   if "rail.type === 'LIVE'" not in worldwide_js:raise ValueError('TG4 Home LIVE rail must replace the API Ireland LIVE rail')
   if (app/'tv-app/login-helper-config.js').read_text().strip()!='window.__tg4LoginHelper={"url":"","key":""};':raise ValueError('TG4 public login helper URL and key must be blank')
   if 'X-TG4-Helper-Key' not in (app/'tv-app/login-proxy.js').read_text():raise ValueError('TG4 helper key header injection is missing')
@@ -43,6 +44,11 @@ def validate(name):
   if 'src="login-helper-config.js"' not in html:raise ValueError('TG4 generated app must load the helper config')
   player=next((app/'tv-app/js').glob('627-*.js'),None)
   if player is None or 'key:n.playbackPaused?"play":"pause"' not in player.read_text():raise ValueError('TG4 play/pause WebKit SVG icon replacement is missing')
+  native=(app/'tv-app/native-backend.js').read_text()
+  if "setStreamingProperty('ADAPTIVE_INFO','STARTBITRATE=HIGHEST')" not in native:raise ValueError('TG4 AVPlay highest-rendition startup is missing')
+  if "'/dvr?u='" not in native or 'offsetRequested' not in native:raise ValueError('TG4 clear +1 normalized DVR seek is missing')
+  worker=(ROOT/'worker/index.mjs').read_text()
+  if "'/dvr'" not in worker or 'playlist-dash-dvr.mpd' not in worker:raise ValueError('TG4 normalized DVR Worker route is missing')
   for p in (app/'tv-app').rglob('*'):
    if p.is_file() and any(x in p.name for x in ['probe','native-test','legacy-eme']):raise ValueError('TG4 diagnostic experiment in public app: '+p.name)
  return app,version

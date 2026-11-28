@@ -4,14 +4,17 @@ Patched TG4+ for Tizen 2.4, based on version `2.0.0`, tested on a Samsung UE40K5
 
 ## What works
 
-- **On demand:** Working via native AVPlay. Might take a while to reach 1080p
+- **On demand:** Working via native AVPlay. TV always attempts to load the highest resolution first.
 - **Subtitles:** Irish and English subtitles available on supported programmes.
-- **Live:** Working via the "Worldwide" stream. Programme rights may differ from the Ireland feed.
+- **Live:** 
+  - TG4 working via its international feed. Many programmes and all sport will be blocked.
+  - TG4+1 (international) is available with a configured Cloudflare Worker (see below).
+  - Spórt TG4 stream available when broadcasting.
 - **Sign-in:** Requires setup (see below)
 
 ## Limitations
 
-- TG4+1, Cúla4 and Spórt TG4 live streams are not supported.
+- DRM-protected TG4 and Cúla4 live streams are not supported.
 - Subtitles are not available for live programmes (not supplied by TG4 for any device)
 
 ## Sign-in

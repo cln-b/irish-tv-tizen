@@ -3,8 +3,10 @@ const assert=require('node:assert/strict');
 (async()=>{
  const {handleRequest}=await import('../../../../worker/index.mjs');
  const calls=[];
+ const dvrMpd='<?xml version="1.0"?><MPD type="dynamic" availabilityStartTime="2024-01-01T00:00:00Z" minimumUpdatePeriod="PT6S" mediaPresentationDuration="PT0S"><Period start="PT25439H47M20S"><SegmentTemplate timescale="50000" media="media_$RepresentationID$_$Number$.mp4" initialization="media_$RepresentationID$_init.mp4" presentationTimeOffset="89782522000000"><SegmentTimeline><S t="89788602800000" d="300000" r="4799"/></SegmentTimeline></SegmentTemplate></Period></MPD>';
  const upstream=async(target,options)=>{
   calls.push({target,options,body:options.body?Buffer.from(options.body).toString('utf8'):null});
+  if(String(target).endsWith('/playlist-dash-dvr.mpd'))return new Response(dvrMpd,{status:200,headers:{'Content-Type':'application/dash+xml'}});
   return new Response('{"ok":true}',{status:200,headers:{'Content-Type':'application/json','ETag':'synthetic','Last-Modified':'Wed, 21 Oct 2015 07:28:00 GMT'}});
  };
  const base='https://worker.invalid';
@@ -49,6 +51,29 @@ const assert=require('node:assert/strict');
  assert.equal(bookmarks.status,200);
  assert.equal(calls.at(-1).target,'https://user.tg4.ie/api/playlist/v3/watch_later?limit=5');
  await bookmarks.body.cancel();
+
+ const dvrSource='https://fastly.live.brightcove.com/sample/playlist-dash-dvr.mpd';
+ const dvr=await handleRequest(new Request(base+'/tg4/dvr?u='+encodeURIComponent(dvrSource)),env,upstream);
+ assert.equal(dvr.status,200,'The clear DVR route must not require the login key');
+ assert.equal(dvr.headers.get('Content-Type'),'application/dash+xml');
+ const dvrText=await dvr.text();
+ assert.equal(calls.at(-1).target,dvrSource);
+ assert.equal(new Headers(calls.at(-1).options.headers).get('X-TG4-Helper-Key'),null,'The login key must not be forwarded with a manifest request');
+ assert.ok(dvrText.includes('type="static"'));
+ assert.ok(dvrText.includes('mediaPresentationDuration="PT8H"'));
+ assert.ok(dvrText.includes('<Period start="PT0S">'));
+ assert.ok(dvrText.includes('presentationTimeOffset="0"'));
+ assert.ok(dvrText.includes('<S t="0" d="300000" r="4799"/>'));
+ assert.ok(dvrText.includes('media="https://fastly.live.brightcove.com/sample/media_$RepresentationID$_$Number$.mp4"'));
+ assert.ok(!dvrText.includes('availabilityStartTime'));
+ assert.ok(!dvrText.includes('minimumUpdatePeriod'));
+ const dvrSigned=await handleRequest(new Request(base+'/tg4/dvr?u='+encodeURIComponent(dvrSource+'?sig=synthetic')),env,upstream);
+ assert.equal(dvrSigned.status,200);
+ assert.equal(calls.at(-1).target,dvrSource+'?sig=synthetic','Manifest query parameters must pass through unchanged');
+ await dvrSigned.body.cancel();
+ assert.equal((await handleRequest(new Request(base+'/tg4/dvr?u='+encodeURIComponent('https://example.invalid/playlist-dash-dvr.mpd')),env,upstream)).status,400,'Only the clear live host may be proxied');
+ assert.equal((await handleRequest(new Request(base+'/tg4/dvr'),env,upstream)).status,400);
+ assert.equal((await handleRequest(new Request(base+'/tg4/dvr?u='+encodeURIComponent('https://fastly.live.brightcove.com/sample/playlist-dash.mpd')),env,upstream)).status,400);
 
  const before=calls.length;
  assert.equal((await handleRequest(new Request(base+'/tg4/sso/token',{

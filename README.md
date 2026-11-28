@@ -10,7 +10,7 @@ Patched Tizen 2.4 apps for **RTÉ Player**, **Virgin Media Play** and **TG4+**, 
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="/apps/rte-player/tv-app/rte-banner.png" alt="RTÉ Player" width="90"/> | ✅ | ✅ | ✅* | ✅ | Very slow to load, occasional restart required | [README](apps/rte-player/README.md) |
 | <img src="/apps/virgin-media-play/tv-app/icon.png" alt="Virgin Media Play" width="90"/> | ✅ | ✅ | ✅ | ✅ | | [README](apps/virgin-media-play/README.md) |
-| <img src="/apps/tg4/tv-app/icon.png" alt="TG4+" width="90"/> | ✅ | ❌ | ✅ | ❌ | Live DRM issues | [README](apps/tg4/README.md) |
+| <img src="/apps/tg4/tv-app/icon.png" alt="TG4+" width="90"/> | ✅ | ⚠️ | ✅* | ✅ | Sports blocked/Cúla4 unavailable  | [README](apps/tg4/README.md) |
 
 Download the **unsigned WGTs** from [releases](https://github.com/cln-b/irish-tv-tizen/releases), then import and sign them in Tizen Studio using a Samsung distributor certificate containing your TV's DUID.
 
@@ -20,25 +20,22 @@ Download the **unsigned WGTs** from [releases](https://github.com/cln-b/irish-tv
 apps/
   rte-player/
     tv-app/              # ready-to-sign app, including config.xml
-    worker/              # RTÉ login helper
     maintenance/         # build inputs, tools and tests
     README.md
-    VERSION
   virgin-media-play/
     tv-app/              # ready-to-sign app, including config.xml
     maintenance/         # frozen frontend, native patches, tools and tests
     README.md
-    VERSION
   tg4/
     tv-app/              # TG4+ catalogue, native VOD and Worldwide Live
     maintenance/         # frozen frontend, compatibility patches and tests
     README.md
-    VERSION
+    worker/              # RTÉ/TG4 login helper
 scripts/package-release.py
-docs/                    # current limitations and investigation handoff
+slop/                    # current limitations and investigation handoff
 ```
 
-See [release packaging](RELEASING.md), [current playback status](slop/STATUS.md), and each app's maintenance README. This repository includes third-party broadcaster/player frontend code needed by the packaged apps; their original notices and ownership remain applicable. The patches do not bypass DRM, sign-in or regional restrictions.
+This repository includes third-party broadcaster/player frontend code needed by the packaged apps; their original notices and ownership remain applicable. The patches do not bypass DRM or regional restrictions.
 
-# AI disclaimer
-I do not claim to have personally achieved anything here. Could someone more knowledgable than me do this faster and better without using AI? 100%. I just wanted to get the players working on my parents' old TV, without needing to hook up a laptop via HDMI.
+## AI disclaimer
+I do not claim to have personally achieved anything here. Could someone more knowledgable than me do this faster and better without using AI? 100%. I just wanted to get the players working on my parents' old TV.

@@ -17,12 +17,12 @@ python3 scripts/package-release.py --app tg4
 
 ## What this build does
 
-- Live is limited to TG4's clear international feed, provider `6384196213112`. Protected Ireland, Cúla4 and TG4+1 streams are excluded on this TV.
-- Home replaces TG4's API LIVE rail with one bottom LIVE rail for that feed. The existing UI creates the rail when Home is scrolled down. Programme titles, artwork and times are passed through from TG4 unchanged, with no added “Worldwide” labels.
-- Playback uses AVPlay for on-demand and clear Live. On-demand keeps its DRM, resume and WebVTT subtitle support. Return removes the AVPlay object and captions; diagnostics are redacted.
-- WebKit 538.1 UI fixes live in `profile-ui.css`. The player chunk recreates the play/pause `<img>` on each toggle and uses 60px intrinsic SVG sizes to avoid the icon repaint bug.
+- Live uses TG4's clear international feed, plus its one-hour timeshift. The +1 entry uses the normalised DVR manifest from the configured Cloudflare Worker. When accessing from an Irish IP, the clear feed and +1 timeshift are synthesised from the Ireland EPG metadata. TG4's separate ONDEMAND stream is preserved unchanged. Protected Ireland and Cúla4 IDs are excluded.
+- Home replaces TG4's API LIVE rail, matching the Live page. The existing UI creates the rail when Home is scrolled down. Programme titles, artwork and times are passed through from TG4 unchanged, with no added “Worldwide” labels.
+- Playback uses AVPlay for on-demand and clear Live. Setting `STARTBITRATE=HIGHEST` through `ADAPTIVE_INFO` while the player is IDLE, so DASH opens at the highest available rendition. On-demand keeps its DRM, resume and WebVTT subtitle support. Return removes the AVPlay object and captions; diagnostics are redacted.
+- WebKit 538.1 UI fixes live in `profile-ui.css`. The player chunk recreates the play/pause `<img>` on each toggle and uses 60px intrinsic SVG sizes so the icon keeps its geometry after selection.
 - A whole-overlay scaling workaround was tried and removed. It was not the cause of the icon problem.
-- Protected Ireland/Cúla4 Live is not supported on this TV: AVPlay `setDrm` fails and the legacy CDM challenge is rejected. No hardcoded licence URLs, manifest rewrites or private credentials are included.
+- Protected Ireland/Cúla4 Live is not supported: AVPlay `setDrm` reports `UnknownError` and the legacy CDM challenge receives `{"error": "retrieving license: 400"}`.
 
 ## Checks
 

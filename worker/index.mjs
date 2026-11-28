@@ -1,6 +1,7 @@
 // One Cloudflare Worker for both legacy TV apps:
 //   RTÉ        /servicelayer/...  or  /rte/servicelayer/...
 //   TG4+       /tg4/sso/...       or  /tg4/user/...
+//   TG4+ DVR   /tg4/dvr?u=...     normalized clear +1 manifest (no account key)
 
 const RTE_PATH = '/servicelayer/api/idm/account/soip/login';
 const RTE_QUERY = '?isocode=IE';
@@ -23,6 +24,80 @@ const TG4_CORS = {
 
 function tg4Headers(extra = {}) {
     return new Headers({...TG4_CORS, ...extra});
+}
+
+// The clear TG4 +1 feed supplies an epoch-anchored dynamic DVR MPD. The TV
+// plays a static, zero-based manifest with absolute segment URLs, so this
+// route resolves that form for +1. The route accepts the exact clear live
+// host and DVR manifest name; credentials and bodies stay out of logs.
+function dvrSourceUrl(value) {
+    let parsed;
+    try { parsed = new URL(value); } catch { return null; }
+    if (parsed.protocol !== 'https:' || parsed.hostname !== 'fastly.live.brightcove.com') return null;
+    if (parsed.username || parsed.password || parsed.port || parsed.hash) return null;
+    if (!parsed.pathname.endsWith('/playlist-dash-dvr.mpd')) return null;
+    return parsed.toString();
+}
+
+function rewriteDvrMpd(manifest, sourceUrl) {
+    const base = sourceUrl.slice(0, sourceUrl.lastIndexOf('/') + 1);
+    const escapeXml = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let xml = String(manifest);
+    xml = xml.replace(/<MPD\b([^>]*)>/, (all, attrs) => {
+        attrs = attrs.replace(/\btype="[^"]*"/, 'type="static"');
+        if (!/\btype=/.test(attrs)) attrs += ' type="static"';
+        attrs = attrs.replace(/\bmediaPresentationDuration="[^"]*"/, '');
+        return '<MPD' + attrs + ' mediaPresentationDuration="PT8H">';
+    });
+    xml = xml.replace(/\bminimumUpdatePeriod="[^"]*"/g, '');
+    xml = xml.replace(/\bavailabilityStartTime="[^"]*"/g, '');
+    xml = xml.replace(/<Period\b([^>]*)>/, (all, attrs) => {
+        if (/\bstart=/.test(attrs)) attrs = attrs.replace(/\bstart="[^"]*"/, 'start="PT0S"');
+        else attrs += ' start="PT0S"';
+        return '<Period' + attrs + '>';
+    });
+    xml = xml.replace(/<SegmentTemplate\b[\s\S]*?<\/SegmentTemplate>/g, block => {
+        const first = /<S\b([^>]*)>/.exec(block);
+        const firstTime = first && /\bt="(\d+)"/.exec(first[1]);
+        if (firstTime) {
+            const origin = Number(firstTime[1]);
+            block = block.replace(/<S\b([^>]*)>/g, (cue, attrs) => {
+                attrs = attrs.replace(/\bt="(\d+)"/, (all, value) => 't="' + String(Number(value) - origin) + '"');
+                return '<S' + attrs + '>';
+            });
+        }
+        block = block.replace(/\bpresentationTimeOffset="[^"]*"/g, 'presentationTimeOffset="0"');
+        return block.replace(/\b(media|initialization)="([^"]+)"/g, (all, name, value) => {
+            if (/^https?:\/\//i.test(value)) return all;
+            return name + '="' + escapeXml(base + value) + '"';
+        });
+    });
+    return xml;
+}
+
+async function handleTg4Dvr(request, upstreamFetch) {
+    const url = new URL(request.url);
+    const source = dvrSourceUrl(url.searchParams.get('u') || '');
+    if (!source) {
+        return new Response('invalid DVR source', {status: 400, headers: tg4Headers({'Content-Type': 'text/plain'})});
+    }
+    try {
+        const response = await upstreamFetch(source, {
+            method: 'GET',
+            headers: {'Accept': 'application/dash+xml'},
+            redirect: 'follow',
+            signal: AbortSignal.timeout(15000)
+        });
+        if (!response.ok) {
+            await response.body?.cancel();
+            return new Response('DVR manifest request unsuccessful', {status: 502, headers: tg4Headers({'Content-Type': 'text/plain'})});
+        }
+        const manifest = await response.text();
+        const body = rewriteDvrMpd(manifest, source);
+        return new Response(body, {status: 200, headers: tg4Headers({'Content-Type': 'application/dash+xml'})});
+    } catch {
+        return new Response('DVR helper error', {status: 502, headers: tg4Headers({'Content-Type': 'text/plain'})});
+    }
 }
 
 // Each app has its own secret so knowing the Worker URL is not enough to use
@@ -93,11 +168,11 @@ async function handleRteLogin(request, env, upstreamFetch, pathname, search) {
         });
         if (response.status >= 300 && response.status < 400) {
             await response.body?.cancel();
-            return reply(502, {error: 'Unexpected RTÉ redirect'});
+            return reply(502, {error: 'RTÉ redirect outside allowlist'});
         }
         return new Response(response.body, {status: response.status, headers});
     } catch {
-        return reply(502, {error: 'RTÉ login request failed'});
+        return reply(502, {error: 'RTÉ login request unsuccessful'});
     }
 }
 
@@ -108,6 +183,7 @@ export async function handleLogin(request, env, upstreamFetch = fetch) {
 
 async function handleTg4(request, env, upstreamFetch, pathname, search) {
     if (request.method === 'OPTIONS') return new Response(null, {status: 204, headers: tg4Headers()});
+    if (pathname === '/dvr' && request.method === 'GET') return handleTg4Dvr(request, upstreamFetch);
     const route = tg4RouteFor(pathname);
     if (!route || !route.methods.includes(request.method)) {
         return new Response('not found', {status: 404, headers: tg4Headers({'Content-Type': 'text/plain'})});
